@@ -57,6 +57,12 @@ pub enum QueryMsg {
         start_after: Option<HumanAddr>,
         limit: Option<u32>,
     },
+    /// Not used to be called directly
+    TransferFrom {
+        owner: HumanAddr,
+        recipient: HumanAddr,
+        amount: Uint128,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

@@ -4,10 +4,7 @@ use crate::user::{
     handle_claim_rewards, handle_unbound, handle_bond, query_accrued_rewards,
     query_holder, query_holders,
 };
-use cosmwasm_std::{
-    to_binary, Api, Binary, Decimal, Env, Extern, HandleResponse, InitResponse, MigrateResponse,
-    MigrateResult, Querier, StdResult, Storage, Uint128,
-};
+use cosmwasm_std::{to_binary, Api, Binary, Decimal, Env, Extern, HandleResponse, InitResponse, MigrateResponse, MigrateResult, Querier, StdResult, Storage, Uint128, StdError};
 
 use crate::msg::{ConfigResponse, HandleMsg, InitMsg, MigrateMsg, QueryMsg, StateResponse};
 use terra_cosmwasm::TerraMsgWrapper;
@@ -68,8 +65,18 @@ pub fn query<S: Storage, A: Api, Q: Querier>(
         QueryMsg::Holder { address } => to_binary(&query_holder(&deps, address)?),
         QueryMsg::Holders { start_after, limit } => {
             to_binary(&query_holders(&deps, start_after, limit)?)
-        }
+        },
+        QueryMsg::TransferFrom { .. } => to_binary(&query_transfer_from(deps)?),
     }
+}
+
+fn query_transfer_from<S: Storage, A: Api, Q: Querier>(
+    _deps: &Extern<S, A, Q>,
+) -> StdResult<StdError> {
+    Err(StdError::Unauthorized { backtrace: None })
+}
+fn query_transfer<S: Storage, A: Api, Q: Querier>(_deps: &Extern<S, A, Q>) -> StdResult<StdError> {
+    Err(StdError::Unauthorized { backtrace: None })
 }
 
 fn query_config<S: Storage, A: Api, Q: Querier>(

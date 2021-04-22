@@ -91,7 +91,7 @@ pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     amount: Uint128,
-) -> StdResult<HandleResponse<TerraMsgWrapper>> {
+) -> StdResult<HandleResponse> {
     let config = read_config(&deps.storage)?;
     let address_raw = deps.api.canonical_address(&env.message.sender)?;
     let sender = env.message.sender;
@@ -109,7 +109,7 @@ pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
         return Err(StdError::generic_err("Amount required"));
     }
     // Prepare msg to send
-    let msg = QueryMsg::TransferFrom {
+    let prepare_msg = QueryMsg::TransferFrom {
         owner: sender.clone(),
         recipient: env.contract.address.clone(),
         amount,
@@ -119,7 +119,7 @@ pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
         .api
         .human_address(&config.cw20_token_addr)?;
     // Prepare the message
-    let res = encode_msg_execute(msg, loterra_human)?;
+    let msg = encode_msg_execute(prepare_msg, loterra_human)?;
 
     let mut state: State = read_state(&deps.storage)?;
     let mut holder: Holder = read_holder(&deps.storage, &address_raw)?;
@@ -135,7 +135,7 @@ pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
     store_holder(&mut deps.storage, &address_raw, &holder)?;
     store_state(&mut deps.storage, &state)?;
     let res = HandleResponse {
-        messages: vec![],
+        messages: vec![msg],
         log: vec![
             log("action", "bond-lota-stake"),
             log("holder_address", sender),
