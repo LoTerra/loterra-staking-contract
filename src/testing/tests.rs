@@ -18,7 +18,7 @@
 //! 4. Anywhere you see query(&deps, ...) you must replace it with query(&mut deps, ...)
 
 use cosmwasm_std::testing::{mock_env, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{from_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, HumanAddr, StdError, Uint128, WasmMsg, CanonicalAddr, to_binary};
+use cosmwasm_std::{from_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, HumanAddr, StdError, Uint128, WasmMsg, to_binary};
 
 use crate::contract::{handle, init, query};
 use crate::math::{decimal_multiplication_in_256, decimal_subtraction_in_256};

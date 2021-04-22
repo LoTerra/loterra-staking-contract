@@ -4,6 +4,7 @@ use crate::user::{handle_claim_rewards, handle_unbound, handle_bond, query_accru
 use cosmwasm_std::{to_binary, Api, Binary, Decimal, Env, Extern, HandleResponse, InitResponse, MigrateResponse, MigrateResult, Querier, StdResult, Storage, Uint128 };
 
 use crate::msg::{ConfigResponse, HandleMsg, InitMsg, MigrateMsg, QueryMsg, StateResponse};
+use crate::claim::query_claims;
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -56,9 +57,8 @@ pub fn query<S: Storage, A: Api, Q: Querier>(
         QueryMsg::State {} => to_binary(&query_state(&deps)?),
         QueryMsg::AccruedRewards { address } => to_binary(&query_accrued_rewards(&deps, address)?),
         QueryMsg::Holder { address } => to_binary(&query_holder(&deps, address)?),
-        QueryMsg::Holders { start_after, limit } => {
-            to_binary(&query_holders(&deps, start_after, limit)?)
-        }
+        QueryMsg::Holders { start_after, limit } => to_binary(&query_holders(&deps, start_after, limit)?),
+        QueryMsg::Claims { address } => to_binary(&query_claims(deps, address)?),
     }
 }
 

@@ -11,7 +11,7 @@ use crate::math::{
 use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse };
 use crate::taxation::deduct_tax;
 use std::str::FromStr;
-use crate::claim::{create_claim, claim_storage_read, claim_tokens};
+use crate::claim::{create_claim, claim_tokens};
 use cw20::{Expiration, Cw20HandleMsg};
 
 pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
