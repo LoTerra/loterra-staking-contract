@@ -1,11 +1,10 @@
-use crate::state::{read_config, read_state, store_state, Config, State};
+use crate::state::{read_config, read_state, store_state, State};
 
 use crate::math::decimal_summation_in_256;
 use cosmwasm_std::{
     log, Api, Decimal, Env, Extern, HandleResponse, Querier, StdError, StdResult,
     Storage,
 };
-use terra_cosmwasm::TerraMsgWrapper;
 
 /// Increase global_index according to claimed rewards amount
 /// Only hub_contract is allowed to execute
@@ -13,7 +12,6 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
 ) -> StdResult<HandleResponse> {
-    let config: Config = read_config(&deps.storage)?;
     let mut state: State = read_state(&deps.storage)?;
 
     // anybody can trigger update_global_index

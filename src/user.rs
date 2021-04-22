@@ -3,17 +3,16 @@ use crate::state::{
     State,
 };
 
-use cosmwasm_std::{log, Api, BankMsg, Coin, Decimal, Env, Extern, HandleResponse, HumanAddr, Querier, StdError, StdResult, Storage, Uint128, CosmosMsg, WasmMsg, to_binary};
+use cosmwasm_std::{log, Api, BankMsg, Coin, Decimal, Env, Extern, HandleResponse, HumanAddr, Querier, StdError, StdResult, Storage, Uint128, WasmMsg, to_binary};
 
 use crate::math::{
     decimal_multiplication_in_256, decimal_subtraction_in_256, decimal_summation_in_256,
 };
-use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse, QueryMsg};
+use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse };
 use crate::taxation::deduct_tax;
 use std::str::FromStr;
-use terra_cosmwasm::TerraMsgWrapper;
 use crate::claim::create_claim;
-use cw20::{Expiration, Cw20Contract, Cw20HandleMsg};
+use cw20::{Expiration, Cw20HandleMsg};
 
 pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -150,14 +149,11 @@ pub fn handle_unbound<S: Storage, A: Api, Q: Querier>(
     let config = read_config(&deps.storage)?;
     let address_raw = deps.api.canonical_address(&env.message.sender)?;
 
-    /*
-        TODO: Add safe_lock
-     */
-    /*if state.safe_lock {
+    if config.safe_lock {
         return Err(StdError::generic_err(
             "Contract deactivated for update or/and preventing security issue",
         ));
-    }*/
+    }
 
     if !env.message.sent_funds.is_empty() {
         return Err(StdError::generic_err("Do not send funds with stake"));
