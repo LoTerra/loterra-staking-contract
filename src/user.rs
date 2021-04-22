@@ -3,15 +3,12 @@ use crate::state::{
     State,
 };
 
-use cosmwasm_std::{
-    log, Api, BankMsg, Coin, Decimal, Env, Extern, HandleResponse, HumanAddr, Querier, StdError,
-    StdResult, Storage, Uint128,
-};
+use cosmwasm_std::{log, Api, BankMsg, Coin, Decimal, Env, Extern, HandleResponse, HumanAddr, Querier, StdError, StdResult, Storage, Uint128, CosmosMsg, WasmMsg, to_binary};
 
 use crate::math::{
     decimal_multiplication_in_256, decimal_subtraction_in_256, decimal_summation_in_256,
 };
-use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse};
+use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse, QueryMsg};
 use crate::taxation::deduct_tax;
 use std::str::FromStr;
 use terra_cosmwasm::TerraMsgWrapper;
@@ -78,6 +75,16 @@ pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     })
 }
 
+// Encode and prepare message to perfom a TransferFrom cw-20 LOTA contract in order to transfer
+// staker LOTA to staking contract funds are locked as a custodian
+fn encode_msg_execute(msg: QueryMsg, address: HumanAddr) -> StdResult<CosmosMsg> {
+    Ok(WasmMsg::Execute {
+        contract_addr: address,
+        msg: to_binary(&msg)?,
+        send: vec![],
+    }
+        .into())
+}
 pub fn handle_increase_balance<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
@@ -119,19 +126,26 @@ pub fn handle_increase_balance<S: Storage, A: Api, Q: Querier>(
     Ok(res)
 }
 
+
 pub fn handle_unbound<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-    address: HumanAddr,
     amount: Uint128,
 ) -> StdResult<HandleResponse<TerraMsgWrapper>> {
-    // Check address is sender
-    if env.message.sender != address {
-        return Err(StdError::unauthorized());
-    }
-
     let config = read_config(&deps.storage)?;
-    let address_raw = deps.api.canonical_address(&address)?;
+    let address_raw = deps.api.canonical_address(&env.message.sender)?;
+    /*if state.safe_lock {
+        return Err(StdError::generic_err(
+            "Contract deactivated for update or/and preventing security issue",
+        ));
+    }*/
+
+    if !env.message.sent_funds.is_empty() {
+        return Err(StdError::generic_err("Do not send funds with stake"));
+    }
+    if amount.is_zero() {
+        return Err(StdError::generic_err("Amount required"));
+    }
 
     let mut state: State = read_state(&deps.storage)?;
     let mut holder: Holder = read_holder(&deps.storage, &address_raw)?;
@@ -159,8 +173,8 @@ pub fn handle_unbound<S: Storage, A: Api, Q: Querier>(
     let res = HandleResponse {
         messages: vec![],
         log: vec![
-            log("action", "unbond_stake"),
-            log("holder_address", address),
+            log("action", "unbond_lota_stake"),
+            log("holder_address", env.message.sender),
             log("amount", amount),
         ],
         data: None,

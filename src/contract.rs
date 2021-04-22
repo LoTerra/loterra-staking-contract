@@ -18,10 +18,13 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     msg: InitMsg,
 ) -> StdResult<InitResponse> {
     let conf = Config {
-        lottery_contract: deps.api.canonical_address(&msg.lottery_contract)?,
-        cw20_token_contract: deps.api.canonical_address(&msg.cw20_token_addr)?,
+        admin: deps.api.canonical_address(&env.message.sender)?,
+        address_cw20_loterra_smart_contract: deps
+            .api
+            .canonical_address(&msg.address_cw20_loterra_smart_contract)?,
         reward_denom: msg.reward_denom,
         unbonding_period: msg.unbonding_period
+
     };
 
     store_config(&mut deps.storage, &conf)?;
@@ -49,7 +52,7 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
             handle_increase_balance(deps, env, address, amount)
         }
         HandleMsg::UnbondBalance { address, amount } => {
-            handle_unbound(deps, env, address, amount)
+            handle_unbound(deps, env, amount)
         }
     }
 }
