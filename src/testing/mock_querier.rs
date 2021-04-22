@@ -3,7 +3,6 @@ use cosmwasm_std::{
     from_slice, to_binary, Coin, Decimal, Extern, HumanAddr, Querier, QuerierResult, QueryRequest,
     SystemError, Uint128,
 };
-use cosmwasm_storage::to_length_prefixed;
 use std::str::FromStr;
 use terra_cosmwasm::{
     ExchangeRateItem, ExchangeRatesResponse, TaxCapResponse, TaxRateResponse, TerraQuery,

@@ -1,4 +1,4 @@
-use crate::global::{handle_swap, handle_update_global_index};
+use crate::global::{handle_update_global_index};
 use crate::state::{read_config, read_state, store_config, store_state, Config, State};
 use crate::user::{
     handle_claim_rewards, handle_decrease_balance, handle_increase_balance, query_accrued_rewards,
