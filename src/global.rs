@@ -2,8 +2,7 @@ use crate::state::{read_config, read_state, store_state, State};
 
 use crate::math::decimal_summation_in_256;
 use cosmwasm_std::{
-    log, Api, Decimal, Env, Extern, HandleResponse, Querier, StdError, StdResult,
-    Storage,
+    log, Api, Decimal, Env, Extern, HandleResponse, Querier, StdError, StdResult, Storage,
 };
 
 /// Increase global_index according to claimed rewards amount

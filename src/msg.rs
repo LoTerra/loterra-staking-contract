@@ -9,7 +9,7 @@ pub struct InitMsg {
     pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
     pub unbonding_period: u64,
-    pub safe_lock: bool
+    pub safe_lock: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -37,7 +37,7 @@ pub enum HandleMsg {
 
     /// Unbound user staking balance
     /// Withdraws released stake
-    WithdrawStake { cap: Option<Uint128>},
+    WithdrawStake { cap: Option<Uint128> },
 
     ////////////////////
     /// User's operations
@@ -62,7 +62,9 @@ pub enum QueryMsg {
         start_after: Option<HumanAddr>,
         limit: Option<u32>,
     },
-    Claims { address: HumanAddr },
+    Claims {
+        address: HumanAddr,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

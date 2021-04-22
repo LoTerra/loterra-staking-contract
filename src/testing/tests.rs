@@ -18,7 +18,10 @@
 //! 4. Anywhere you see query(&deps, ...) you must replace it with query(&mut deps, ...)
 
 use cosmwasm_std::testing::{mock_env, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{from_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, HumanAddr, StdError, Uint128, WasmMsg, to_binary};
+use cosmwasm_std::{
+    from_binary, to_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, HumanAddr, StdError, Uint128,
+    WasmMsg,
+};
 
 use crate::contract::{handle, init, query};
 use crate::math::{decimal_multiplication_in_256, decimal_subtraction_in_256};
@@ -29,8 +32,8 @@ use crate::state::{store_holder, store_state, Holder, State};
 use crate::testing::mock_querier::{
     mock_dependencies, MOCK_CW20_CONTRACT_ADDR, MOCK_HUB_CONTRACT_ADDR, MOCK_TOKEN_CONTRACT_ADDR,
 };
-use std::str::FromStr;
 use cw20::Cw20HandleMsg;
+use std::str::FromStr;
 
 const DEFAULT_REWARD_DENOM: &str = "uusd";
 
@@ -40,7 +43,7 @@ fn default_init() -> InitMsg {
         cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
         reward_denom: DEFAULT_REWARD_DENOM.to_string(),
         unbonding_period: 1000,
-        safe_lock: false
+        safe_lock: false,
     }
 }
 
@@ -77,7 +80,6 @@ fn proper_init() {
         }
     );
 }
-
 
 #[test]
 fn update_global_index() {
@@ -492,7 +494,7 @@ fn withdraw_stake() {
             address: HumanAddr::from("addr0000"),
         },
     )
-        .unwrap();
+    .unwrap();
     let holder_response: HolderResponse = from_binary(&res).unwrap();
     assert_eq!(
         holder_response,
@@ -526,33 +528,40 @@ fn withdraw_stake() {
     );
 
     // withdraw stake
-    let msg = HandleMsg::UnbondStake{ amount: Uint128::from(100u128) };
+    let msg = HandleMsg::UnbondStake {
+        amount: Uint128::from(100u128),
+    };
     let mut env = mock_env("addr0000", &[]);
     env.block.height = 5;
     handle(&mut deps, env, msg).unwrap();
 
     // withdraw before unbonding fails
-    let msg = HandleMsg::WithdrawStake{ cap: None };
+    let msg = HandleMsg::WithdrawStake { cap: None };
     let mut env = mock_env("addr0000", &[]);
     env.block.height = 10;
     let res = handle(&mut deps, env, msg);
     match res {
         Err(StdError::GenericErr {
-                msg,
-                backtrace: None,
-            }) => {
+            msg,
+            backtrace: None,
+        }) => {
             assert_eq!(msg, "Wait for the unbonding period");
         }
-        _ => {panic!("Unexpected error")},
+        _ => {
+            panic!("Unexpected error")
+        }
     }
 
     // withdraw works after unbonding period
-    let msg = HandleMsg::WithdrawStake{ cap: None };
+    let msg = HandleMsg::WithdrawStake { cap: None };
     let mut env = mock_env("addr0000", &[]);
     env.block.height = 10000;
     let res = handle(&mut deps, env, msg).unwrap();
 
-    let cw20_transfer_msg = Cw20HandleMsg::Transfer { recipient: HumanAddr::from("addr0000"), amount: Uint128::from(100u128) };
+    let cw20_transfer_msg = Cw20HandleMsg::Transfer {
+        recipient: HumanAddr::from("addr0000"),
+        amount: Uint128::from(100u128),
+    };
     assert_eq!(
         res.messages,
         vec![CosmosMsg::Wasm(WasmMsg::Execute {
@@ -591,7 +600,7 @@ fn withdraw_stake_cap() {
             address: HumanAddr::from("addr0000"),
         },
     )
-        .unwrap();
+    .unwrap();
     let holder_response: HolderResponse = from_binary(&res).unwrap();
     assert_eq!(
         holder_response,
@@ -625,18 +634,25 @@ fn withdraw_stake_cap() {
     );
 
     // withdraw stake
-    let msg = HandleMsg::UnbondStake{ amount: Uint128::from(100u128) };
+    let msg = HandleMsg::UnbondStake {
+        amount: Uint128::from(100u128),
+    };
     let mut env = mock_env("addr0000", &[]);
     env.block.height = 5;
     handle(&mut deps, env, msg).unwrap();
 
     // withdraw works after unbonding period
-    let msg = HandleMsg::WithdrawStake{ cap: Some(Uint128::from(50u128))};
+    let msg = HandleMsg::WithdrawStake {
+        cap: Some(Uint128::from(50u128)),
+    };
     let mut env = mock_env("addr0000", &[]);
     env.block.height = 10000;
     let res = handle(&mut deps, env, msg).unwrap();
 
-    let cw20_transfer_msg = Cw20HandleMsg::Transfer { recipient: HumanAddr::from("addr0000"), amount: Uint128::from(50u128) };
+    let cw20_transfer_msg = Cw20HandleMsg::Transfer {
+        recipient: HumanAddr::from("addr0000"),
+        amount: Uint128::from(50u128),
+    };
     assert_eq!(
         res.messages,
         vec![CosmosMsg::Wasm(WasmMsg::Execute {
