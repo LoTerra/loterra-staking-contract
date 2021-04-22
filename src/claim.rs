@@ -1,11 +1,10 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, BlockInfo, Deps, StdResult, Storage, Uint128, CanonicalAddr};
-use cw0::Expiration;
-use cw_storage_plus::Map;
-use cw20::Expiration;
+use cosmwasm_std::{BlockInfo, StdResult, Storage, Uint128, CanonicalAddr};
+// use cw_storage_plus::Map;
 use cosmwasm_storage::{Bucket, ReadonlyBucket, bucket, bucket_read};
+use cw20::Expiration;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ClaimsResponse {
@@ -37,6 +36,7 @@ pub fn claim_storage_read<T: Storage>(storage: &mut T) -> ReadonlyBucket<T, Clai
     bucket_read(CLAIM_KEY, storage)
 }
 
+
 /// This creates a claim, such that the given address can claim an amount of tokens after
 /// the release date.
 pub fn create_claim<S: Storage>(
@@ -57,6 +57,10 @@ pub fn create_claim<S: Storage>(
 
 /// This iterates over all mature claims for the address, and removes them, up to an optional cap.
 /// it removes the finished claims and returns the total amount of tokens to be released.
+/*
+    TODO: claim stake need a Transfer WasmMsg::Execute in order
+     to transfer cw-20 from the staking contract to claimer address
+ */
 pub fn claim_tokens<S: Storage>(
     storage: &mut S,
     addr: CanonicalAddr,

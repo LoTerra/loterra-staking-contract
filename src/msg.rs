@@ -5,7 +5,7 @@ use cosmwasm_std::{Decimal, HumanAddr, Uint128};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitMsg {
-    pub lottery_contract: HumanAddr,
+    pub admin: HumanAddr,
     pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
     pub unbonding_period: u64,
@@ -28,11 +28,11 @@ pub enum HandleMsg {
     /// Increase user staking balance
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
-    IncreaseBalance { address: HumanAddr, amount: Uint128 },
+    BondBalance { amount: Uint128 },
     /// Unbound user staking balance
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
-    UnbondBalance { address: HumanAddr, amount: Uint128 },
+    UnbondBalance { amount: Uint128 },
 
     ////////////////////
     /// User's operations
@@ -57,13 +57,20 @@ pub enum QueryMsg {
         start_after: Option<HumanAddr>,
         limit: Option<u32>,
     },
+    /// Not used to be called directly
+    TransferFrom {
+        owner: HumanAddr,
+        recipient: HumanAddr,
+        amount: Uint128,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigResponse {
-    pub lottery_contract: HumanAddr,
-    pub cw20_token_contract: HumanAddr,
+    pub admin: HumanAddr,
+    pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
+    pub unbonding_period: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

@@ -14,8 +14,8 @@ pub static PREFIX_HOLDERS: &[u8] = b"holders";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
-    pub lottery_contract: CanonicalAddr,
-    pub cw20_token_contract: CanonicalAddr,
+    pub admin: CanonicalAddr,
+    pub cw20_token_addr: CanonicalAddr,
     pub reward_denom: String,
     pub unbonding_period: u64,
 }
