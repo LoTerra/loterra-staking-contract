@@ -15,7 +15,7 @@ pub fn handle_swap<S: Storage, A: Api, Q: Querier>(
     env: Env,
 ) -> StdResult<HandleResponse<TerraMsgWrapper>> {
     let config = read_config(&deps.storage)?;
-    let owner_addr = deps.api.human_address(&config.hub_contract).unwrap();
+    let owner_addr = deps.api.human_address(&config.lottery_contract).unwrap();
 
     if env.message.sender != owner_addr {
         return Err(StdError::unauthorized());
@@ -73,7 +73,7 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
     let mut state: State = read_state(&deps.storage)?;
 
     // Permission check
-    if config.hub_contract != deps.api.canonical_address(&env.message.sender)? {
+    if config.lottery_contract != deps.api.canonical_address(&env.message.sender)? {
         return Err(StdError::unauthorized());
     }
 

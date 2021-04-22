@@ -18,7 +18,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     msg: InitMsg,
 ) -> StdResult<InitResponse> {
     let conf = Config {
-        hub_contract: deps.api.canonical_address(&msg.hub_contract)?,
+        lottery_contract: deps.api.canonical_address(&msg.lottery_contract)?,
         cw20_token_contract: deps.api.canonical_address(&msg.cw20_token_addr)?,
         reward_denom: msg.reward_denom,
     };
@@ -43,7 +43,6 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<HandleResponse<TerraMsgWrapper>> {
     match msg {
         HandleMsg::ClaimRewards { recipient } => handle_claim_rewards(deps, env, recipient),
-        HandleMsg::SwapToRewardDenom {} => handle_swap(deps, env),
         HandleMsg::UpdateGlobalIndex {} => handle_update_global_index(deps, env),
         HandleMsg::IncreaseBalance { address, amount } => {
             handle_increase_balance(deps, env, address, amount)
@@ -74,7 +73,8 @@ fn query_config<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<ConfigResponse> {
     let config: Config = read_config(&deps.storage)?;
     Ok(ConfigResponse {
-        hub_contract: deps.api.human_address(&config.hub_contract)?,
+        lottery_contract: deps.api.human_address(&config.lottery_contract)?,
+        cw20_token_contract: deps.api.human_address(&config.cw20_token_contract)?,
         reward_denom: config.reward_denom,
     })
 }

@@ -5,7 +5,7 @@ use cosmwasm_std::{Decimal, HumanAddr, Uint128};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitMsg {
-    pub hub_contract: HumanAddr,
+    pub lottery_contract: HumanAddr,
     pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
 }
@@ -16,9 +16,6 @@ pub enum HandleMsg {
     ////////////////////
     /// Owner's operations
     ///////////////////
-
-    /// Swap all of the balances to uusd.
-    SwapToRewardDenom {},
 
     /// Update the global index
     UpdateGlobalIndex {},
@@ -63,7 +60,8 @@ pub enum QueryMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigResponse {
-    pub hub_contract: HumanAddr,
+    pub lottery_contract: HumanAddr,
+    pub cw20_token_contract: HumanAddr,
     pub reward_denom: String,
 }
 

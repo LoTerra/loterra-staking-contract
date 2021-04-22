@@ -38,7 +38,7 @@ const DEFAULT_REWARD_DENOM: &str = "uusd";
 
 fn default_init() -> InitMsg {
     InitMsg {
-        hub_contract: HumanAddr::from(MOCK_HUB_CONTRACT_ADDR),
+        lottery_contract: HumanAddr::from(MOCK_HUB_CONTRACT_ADDR),
         cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
         reward_denom: DEFAULT_REWARD_DENOM.to_string(),
     }
@@ -59,7 +59,8 @@ fn proper_init() {
     assert_eq!(
         config_response,
         ConfigResponse {
-            hub_contract: HumanAddr::from(MOCK_HUB_CONTRACT_ADDR),
+            lottery_contract: HumanAddr::from(MOCK_HUB_CONTRACT_ADDR),
+            cw20_token_contract: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
             reward_denom: DEFAULT_REWARD_DENOM.to_string(),
         }
     );
@@ -76,73 +77,6 @@ fn proper_init() {
     );
 }
 
-#[test]
-pub fn swap_to_reward_denom() {
-    let mut deps = mock_dependencies(
-        20,
-        &[
-            Coin {
-                denom: "uusd".to_string(),
-                amount: Uint128(100u128),
-            },
-            Coin {
-                denom: "ukrw".to_string(),
-                amount: Uint128(1000u128),
-            },
-            Coin {
-                denom: "usdr".to_string(),
-                amount: Uint128(50u128),
-            },
-            Coin {
-                denom: "mnt".to_string(),
-                amount: Uint128(50u128),
-            },
-            Coin {
-                denom: "uinr".to_string(),
-                amount: Uint128(50u128),
-            },
-        ],
-    );
-
-    let init_msg = default_init();
-    let env = mock_env("addr0000", &[]);
-
-    init(&mut deps, env, init_msg).unwrap();
-
-    let env = mock_env(HumanAddr::from(MOCK_HUB_CONTRACT_ADDR), &[]);
-    let msg = HandleMsg::SwapToRewardDenom {};
-
-    let res = handle(&mut deps, env, msg).unwrap();
-    assert_eq!(
-        res.messages,
-        vec![
-            create_swap_msg(
-                HumanAddr::from(MOCK_CONTRACT_ADDR),
-                Coin {
-                    denom: "ukrw".to_string(),
-                    amount: Uint128(1000u128),
-                },
-                DEFAULT_REWARD_DENOM.to_string()
-            ),
-            create_swap_msg(
-                HumanAddr::from(MOCK_CONTRACT_ADDR),
-                Coin {
-                    denom: "usdr".to_string(),
-                    amount: Uint128(50u128)
-                },
-                DEFAULT_REWARD_DENOM.to_string()
-            ),
-            create_swap_msg(
-                HumanAddr::from(MOCK_CONTRACT_ADDR),
-                Coin {
-                    denom: "uinr".to_string(),
-                    amount: Uint128(50u128)
-                },
-                DEFAULT_REWARD_DENOM.to_string()
-            ),
-        ]
-    );
-}
 
 #[test]
 fn update_global_index() {
