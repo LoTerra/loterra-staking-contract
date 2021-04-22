@@ -98,7 +98,7 @@ pub fn handle_increase_balance<S: Storage, A: Api, Q: Querier>(
     let sender = env.message.sender;
 
     // Check sender is token contract
-    if sender != deps.api.human_address(&config.cw20_token_contract)? {
+    if sender != deps.api.human_address(&config.cw20_token_addr)? {
         return Err(StdError::unauthorized());
     }
 

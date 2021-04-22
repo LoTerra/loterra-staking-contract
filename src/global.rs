@@ -6,7 +6,9 @@ use cosmwasm_std::{
     Storage,
 };
 use terra_cosmwasm::TerraMsgWrapper;
-
+/*
+    TODO: need to remove or adapt this
+ */
 /// Increase global_index according to claimed rewards amount
 /// Only hub_contract is allowed to execute
 pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(

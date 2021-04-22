@@ -5,7 +5,7 @@ use cosmwasm_std::{Decimal, HumanAddr, Uint128};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitMsg {
-    pub lottery_contract: HumanAddr,
+    pub admin: HumanAddr,
     pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
     pub unbonding_period: u64,
@@ -61,9 +61,10 @@ pub enum QueryMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigResponse {
-    pub lottery_contract: HumanAddr,
-    pub cw20_token_contract: HumanAddr,
+    pub admin: HumanAddr,
+    pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
+    pub unbonding_period: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

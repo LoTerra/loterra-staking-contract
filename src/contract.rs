@@ -14,14 +14,14 @@ use terra_cosmwasm::TerraMsgWrapper;
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
-    _env: Env,
+    env: Env,
     msg: InitMsg,
 ) -> StdResult<InitResponse> {
     let conf = Config {
         admin: deps.api.canonical_address(&env.message.sender)?,
-        address_cw20_loterra_smart_contract: deps
+        cw20_token_addr: deps
             .api
-            .canonical_address(&msg.address_cw20_loterra_smart_contract)?,
+            .canonical_address(&msg.cw20_token_addr)?,
         reward_denom: msg.reward_denom,
         unbonding_period: msg.unbonding_period
 
@@ -77,9 +77,10 @@ fn query_config<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<ConfigResponse> {
     let config: Config = read_config(&deps.storage)?;
     Ok(ConfigResponse {
-        lottery_contract: deps.api.human_address(&config.lottery_contract)?,
-        cw20_token_contract: deps.api.human_address(&config.cw20_token_contract)?,
+        admin: deps.api.human_address(&config.admin)?,
+        cw20_token_addr: deps.api.human_address(&config.cw20_token_addr)?,
         reward_denom: config.reward_denom,
+        unbonding_period: 0
     })
 }
 
