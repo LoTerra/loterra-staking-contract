@@ -26,13 +26,13 @@ impl Claim {
     }
 }
 
-static CLAIM_KEY: &[u8] = b"claim";
+static CLAIM_KEY: &[u8] = b"claims";
 
-pub fn claim_storage<T: Storage>(storage: &mut T) -> Bucket<T, Claim> {
+pub fn claim_storage<T: Storage>(storage: &mut T) -> Bucket<T, Vec<Claim>> {
     bucket(CLAIM_KEY, storage)
 }
 
-pub fn claim_storage_read<T: Storage>(storage: &mut T) -> ReadonlyBucket<T, Claim> {
+pub fn claim_storage_read<T: Storage>(storage: &mut T) -> ReadonlyBucket<T, Vec<Claim>> {
     bucket_read(CLAIM_KEY, storage)
 }
 
@@ -68,7 +68,7 @@ pub fn claim_tokens<S: Storage>(
     cap: Option<Uint128>,
 ) -> StdResult<Uint128> {
     let mut to_send = Uint128(0);
-    claim_storage(storage).update(addr.as_slice(), |old| -> StdResult<_> {
+    claim_storage(storage).update(addr.as_slice(), |claim| -> StdResult<_> {
         let (_send, waiting): (Vec<_>, _) =
             claim.unwrap_or_default().iter().cloned().partition(|c| {
                 // if mature and we can pay fully, then include in _send

@@ -18,6 +18,7 @@ pub struct Config {
     pub cw20_token_addr: CanonicalAddr,
     pub reward_denom: String,
     pub unbonding_period: u64,
+    pub safe_lock: bool
 }
 
 pub fn store_config<S: Storage>(storage: &mut S, config: &Config) -> StdResult<()> {

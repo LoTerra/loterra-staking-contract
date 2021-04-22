@@ -20,8 +20,8 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
             .api
             .canonical_address(&msg.cw20_token_addr)?,
         reward_denom: msg.reward_denom,
-        unbonding_period: msg.unbonding_period
-
+        unbonding_period: msg.unbonding_period,
+        safe_lock: msg.safe_lock
     };
 
     store_config(&mut deps.storage, &conf)?;
@@ -41,7 +41,7 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     msg: HandleMsg,
-) -> StdResult<HandleResponse<TerraMsgWrapper>> {
+) -> StdResult<HandleResponse> {
     match msg {
         HandleMsg::ClaimRewards { recipient } => handle_claim_rewards(deps, env, recipient),
         HandleMsg::UpdateGlobalIndex {} => handle_update_global_index(deps, env),
@@ -65,18 +65,8 @@ pub fn query<S: Storage, A: Api, Q: Querier>(
         QueryMsg::Holder { address } => to_binary(&query_holder(&deps, address)?),
         QueryMsg::Holders { start_after, limit } => {
             to_binary(&query_holders(&deps, start_after, limit)?)
-        },
-        QueryMsg::TransferFrom { .. } => to_binary(&query_transfer_from(deps)?),
+        }
     }
-}
-
-fn query_transfer_from<S: Storage, A: Api, Q: Querier>(
-    _deps: &Extern<S, A, Q>,
-) -> StdResult<StdError> {
-    Err(StdError::Unauthorized { backtrace: None })
-}
-fn query_transfer<S: Storage, A: Api, Q: Querier>(_deps: &Extern<S, A, Q>) -> StdResult<StdError> {
-    Err(StdError::Unauthorized { backtrace: None })
 }
 
 fn query_config<S: Storage, A: Api, Q: Querier>(

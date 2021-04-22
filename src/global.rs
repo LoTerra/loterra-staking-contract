@@ -6,22 +6,22 @@ use cosmwasm_std::{
     Storage,
 };
 use terra_cosmwasm::TerraMsgWrapper;
-/*
-    TODO: need to remove or adapt this
- */
+
 /// Increase global_index according to claimed rewards amount
 /// Only hub_contract is allowed to execute
 pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-) -> StdResult<HandleResponse<TerraMsgWrapper>> {
+) -> StdResult<HandleResponse> {
     let config: Config = read_config(&deps.storage)?;
     let mut state: State = read_state(&deps.storage)?;
 
-    // Permission check
+    // anybody can trigger update_global_index
+    /*
     if config.lottery_contract != deps.api.canonical_address(&env.message.sender)? {
         return Err(StdError::unauthorized());
     }
+     */
 
     // Zero staking balance check
     if state.total_balance.is_zero() {
