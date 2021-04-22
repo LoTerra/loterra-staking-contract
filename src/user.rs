@@ -10,6 +10,7 @@ use crate::math::{
 };
 use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse, QueryMsg};
 use crate::taxation::deduct_tax;
+use crate::helper::encode_msg_execute;
 use std::str::FromStr;
 use terra_cosmwasm::TerraMsgWrapper;
 use crate::claim::create_claim;
@@ -75,18 +76,6 @@ pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     })
 }
 
-/*
-    Encode and prepare message to perfom a TransferFrom cw-20 LOTA contract in order to transfer
-    staker LOTA to staking contract funds are locked as a custodian
-*/
-fn encode_msg_execute(msg: QueryMsg, address: HumanAddr) -> StdResult<CosmosMsg> {
-    Ok(WasmMsg::Execute {
-        contract_addr: address,
-        msg: to_binary(&msg)?,
-        send: vec![],
-    }
-        .into())
-}
 pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
