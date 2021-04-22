@@ -37,7 +37,7 @@ pub enum HandleMsg {
 
     /// Unbound user staking balance
     /// Withdraws released stake
-    WithdrawStake { amount: Uint128 },
+    WithdrawStake { cap: Option<Uint128>},
 
     ////////////////////
     /// User's operations

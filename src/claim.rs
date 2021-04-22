@@ -32,10 +32,9 @@ pub fn claim_storage<T: Storage>(storage: &mut T) -> Bucket<T, Vec<Claim>> {
     bucket(CLAIM_KEY, storage)
 }
 
-pub fn claim_storage_read<T: Storage>(storage: &mut T) -> ReadonlyBucket<T, Vec<Claim>> {
+pub fn claim_storage_read<T: Storage>(storage: &T) -> ReadonlyBucket<T, Vec<Claim>> {
     bucket_read(CLAIM_KEY, storage)
 }
-
 
 /// This creates a claim, such that the given address can claim an amount of tokens after
 /// the release date.

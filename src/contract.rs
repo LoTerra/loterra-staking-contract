@@ -1,9 +1,6 @@
 use crate::global::{handle_update_global_index};
 use crate::state::{read_config, read_state, store_config, store_state, Config, State};
-use crate::user::{
-    handle_claim_rewards, handle_unbound, handle_bond, query_accrued_rewards,
-    query_holder, query_holders,
-};
+use crate::user::{handle_claim_rewards, handle_unbound, handle_bond, query_accrued_rewards, query_holder, query_holders, handle_withdraw_stake};
 use cosmwasm_std::{to_binary, Api, Binary, Decimal, Env, Extern, HandleResponse, InitResponse, MigrateResponse, MigrateResult, Querier, StdResult, Storage, Uint128 };
 
 use crate::msg::{ConfigResponse, HandleMsg, InitMsg, MigrateMsg, QueryMsg, StateResponse};
@@ -44,12 +41,9 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     match msg {
         HandleMsg::ClaimRewards { recipient } => handle_claim_rewards(deps, env, recipient),
         HandleMsg::UpdateGlobalIndex {} => handle_update_global_index(deps, env),
-        HandleMsg::BondStake { amount } => {
-            handle_bond(deps, env, amount)
-        }
-        HandleMsg::UnbondStake { amount } => {
-            handle_unbound(deps, env, amount)
-        }
+        HandleMsg::BondStake { amount } => handle_bond(deps, env, amount),
+        HandleMsg::UnbondStake { amount } => handle_unbound(deps, env, amount),
+        HandleMsg::WithdrawStake { cap } => handle_withdraw_stake(deps, env, cap)
     }
 }
 

@@ -11,7 +11,7 @@ use crate::math::{
 use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse };
 use crate::taxation::deduct_tax;
 use std::str::FromStr;
-use crate::claim::create_claim;
+use crate::claim::{create_claim, claim_storage_read, claim_tokens};
 use cw20::{Expiration, Cw20HandleMsg};
 
 pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
@@ -196,6 +196,38 @@ pub fn handle_unbound<S: Storage, A: Api, Q: Querier>(
     };
 
     Ok(res)
+}
+
+pub fn handle_withdraw_stake <S: Storage, A: Api, Q: Querier>(
+    deps: &mut Extern<S, A, Q>,
+    env: Env,
+    cap: Option<Uint128>
+) -> StdResult<HandleResponse> {
+    let config = read_config(&deps.storage)?;
+    let addr = deps.api.canonical_address(&env.message.sender)?;
+
+    let amount = claim_tokens(&mut deps.storage, addr, &env.block, cap)?;
+    if amount.is_zero() {
+        return Err(StdError::GenericErr { msg: "Wait for the unbonding period".into(), backtrace: None });
+    }
+
+    let cw20_human_addr = deps.api.human_address(&config.cw20_token_addr)?;
+    let cw20_transfer_msg = Cw20HandleMsg::Transfer { recipient: env.message.sender.clone(), amount };
+    let msg = WasmMsg::Execute {
+        contract_addr: cw20_human_addr,
+        msg: to_binary(&cw20_transfer_msg)?,
+        send: vec![],
+    };
+
+    Ok(HandleResponse{
+        messages: vec![msg.into()],
+        log: vec![
+            log("action", "withdraw_stake"),
+            log("holder_address", &env.message.sender),
+            log("amount", amount),
+        ],
+        data: None
+    })
 }
 
 pub fn query_accrued_rewards<S: Storage, A: Api, Q: Querier>(
