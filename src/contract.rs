@@ -9,8 +9,8 @@ use cosmwasm_std::{
     MigrateResult, Querier, StdResult, Storage, Uint128,
 };
 
+use crate::msg::{ConfigResponse, HandleMsg, InitMsg, MigrateMsg, QueryMsg, StateResponse};
 use terra_cosmwasm::TerraMsgWrapper;
-use crate::msg::{InitMsg, HandleMsg, QueryMsg, ConfigResponse, StateResponse, MigrateMsg};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -19,6 +19,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<InitResponse> {
     let conf = Config {
         hub_contract: deps.api.canonical_address(&msg.hub_contract)?,
+        cw20_token_contract: deps.api.canonical_address(&msg.cw20_token_addr)?,
         reward_denom: msg.reward_denom,
     };
 

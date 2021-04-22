@@ -1,7 +1,7 @@
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    from_slice, to_binary, Api, Coin, Decimal, Extern, HumanAddr, Querier, QuerierResult,
-    QueryRequest, SystemError, Uint128, WasmQuery,
+    from_slice, to_binary, Coin, Decimal, Extern, HumanAddr, Querier, QuerierResult, QueryRequest,
+    SystemError, Uint128,
 };
 use cosmwasm_storage::to_length_prefixed;
 use std::str::FromStr;
@@ -11,6 +11,7 @@ use terra_cosmwasm::{
 };
 
 pub const MOCK_HUB_CONTRACT_ADDR: &str = "hub";
+pub const MOCK_CW20_CONTRACT_ADDR: &str = "lottery";
 pub const MOCK_REWARD_CONTRACT_ADDR: &str = "reward";
 pub const MOCK_TOKEN_CONTRACT_ADDR: &str = "token";
 
@@ -92,33 +93,6 @@ impl WasmMockQuerier {
                     }
                 } else {
                     panic!("DO NOT ENTER HERE")
-                }
-            }
-            QueryRequest::Wasm(WasmQuery::Raw { contract_addr, key }) => {
-                if *contract_addr == HumanAddr::from(MOCK_HUB_CONTRACT_ADDR) {
-                    let prefix_config = to_length_prefixed(b"config").to_vec();
-                    let api: MockApi = MockApi::new(self.canonical_length);
-                    if key.as_slice().to_vec() == prefix_config {
-                        let config = Config {
-                            creator: api.canonical_address(&HumanAddr::from("owner1")).unwrap(),
-                            reward_contract: Some(
-                                api.canonical_address(&HumanAddr::from(MOCK_REWARD_CONTRACT_ADDR))
-                                    .unwrap(),
-                            ),
-                            token_contract: Some(
-                                api.canonical_address(&HumanAddr::from(MOCK_TOKEN_CONTRACT_ADDR))
-                                    .unwrap(),
-                            ),
-                            airdrop_registry_contract: Some(
-                                api.canonical_address(&HumanAddr::from("airdrop")).unwrap(),
-                            ),
-                        };
-                        Ok(to_binary(&to_binary(&config).unwrap()))
-                    } else {
-                        unimplemented!()
-                    }
-                } else {
-                    unimplemented!()
                 }
             }
             _ => self.base.handle_query(request),

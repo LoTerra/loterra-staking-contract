@@ -25,18 +25,21 @@ use terra_cosmwasm::create_swap_msg;
 
 use crate::contract::{handle, init, query};
 use crate::math::{decimal_multiplication_in_256, decimal_subtraction_in_256};
+use crate::msg::{
+    ConfigResponse, HandleMsg, HolderResponse, HoldersResponse, InitMsg, QueryMsg, StateResponse,
+};
 use crate::state::{store_holder, store_state, Holder, State};
 use crate::testing::mock_querier::{
-    mock_dependencies, MOCK_HUB_CONTRACT_ADDR, MOCK_TOKEN_CONTRACT_ADDR,
+    mock_dependencies, MOCK_CW20_CONTRACT_ADDR, MOCK_HUB_CONTRACT_ADDR, MOCK_TOKEN_CONTRACT_ADDR,
 };
 use std::str::FromStr;
-use crate::msg::{QueryMsg, ConfigResponse, StateResponse, HandleMsg, HolderResponse, HoldersResponse, InitMsg};
 
 const DEFAULT_REWARD_DENOM: &str = "uusd";
 
 fn default_init() -> InitMsg {
     InitMsg {
         hub_contract: HumanAddr::from(MOCK_HUB_CONTRACT_ADDR),
+        cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
         reward_denom: DEFAULT_REWARD_DENOM.to_string(),
     }
 }

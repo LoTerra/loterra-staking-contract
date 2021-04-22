@@ -6,6 +6,7 @@ use cosmwasm_std::{Decimal, HumanAddr, Uint128};
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitMsg {
     pub hub_contract: HumanAddr,
+    pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
 }
 

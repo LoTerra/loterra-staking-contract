@@ -11,10 +11,10 @@ use cosmwasm_std::{
 use crate::math::{
     decimal_multiplication_in_256, decimal_subtraction_in_256, decimal_summation_in_256,
 };
+use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse};
+use crate::taxation::deduct_tax;
 use std::str::FromStr;
 use terra_cosmwasm::TerraMsgWrapper;
-use crate::taxation::deduct_tax;
-use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse};
 
 pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -83,16 +83,11 @@ pub fn handle_increase_balance<S: Storage, A: Api, Q: Querier>(
     amount: Uint128,
 ) -> StdResult<HandleResponse<TerraMsgWrapper>> {
     let config = read_config(&deps.storage)?;
-    let owner_human = deps.api.human_address(&config.hub_contract)?;
     let address_raw = deps.api.canonical_address(&address)?;
     let sender = env.message.sender;
 
-    let token_address = deps
-        .api
-        .human_address(&query_token_contract(&deps, owner_human)?)?;
-
     // Check sender is token contract
-    if sender != token_address {
+    if sender != deps.api.human_address(&config.cw20_token_contract)? {
         return Err(StdError::unauthorized());
     }
 
@@ -129,13 +124,10 @@ pub fn handle_decrease_balance<S: Storage, A: Api, Q: Querier>(
     amount: Uint128,
 ) -> StdResult<HandleResponse<TerraMsgWrapper>> {
     let config = read_config(&deps.storage)?;
-    let hub_contract = deps.api.human_address(&config.hub_contract)?;
     let address_raw = deps.api.canonical_address(&address)?;
 
     // Check sender is token contract
-    if query_token_contract(&deps, hub_contract)?
-        != deps.api.canonical_address(&env.message.sender)?
-    {
+    if env.message.sender != deps.api.human_address(&config.cw20_token_contract)? {
         return Err(StdError::unauthorized());
     }
 

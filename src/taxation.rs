@@ -14,9 +14,9 @@ pub fn compute_tax<S: Storage, A: Api, Q: Querier>(
     Ok(std::cmp::min(
         (coin.amount
             - coin.amount.multiply_ratio(
-            DECIMAL_FRACTION,
-            DECIMAL_FRACTION * tax_rate + DECIMAL_FRACTION,
-        ))?,
+                DECIMAL_FRACTION,
+                DECIMAL_FRACTION * tax_rate + DECIMAL_FRACTION,
+            ))?,
         tax_cap,
     ))
 }

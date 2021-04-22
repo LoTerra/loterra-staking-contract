@@ -1,3 +1,4 @@
+use crate::msg::HolderResponse;
 use cosmwasm_std::{
     Api, CanonicalAddr, Decimal, Extern, HumanAddr, Order, Querier, ReadonlyStorage, StdResult,
     Storage, Uint128,
@@ -5,7 +6,6 @@ use cosmwasm_std::{
 use cosmwasm_storage::{bucket, bucket_read, singleton, singleton_read, ReadonlyBucket};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::msg::HolderResponse;
 
 pub static KEY_CONFIG: &[u8] = b"config";
 pub static KEY_STATE: &[u8] = b"state";
