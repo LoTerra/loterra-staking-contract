@@ -128,7 +128,7 @@ pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
     let res = HandleResponse {
         messages: vec![msg],
         log: vec![
-            log("action", "bond-lota-stake"),
+            log("action", "bond_stake"),
             log("holder_address", sender),
             log("amount", amount),
         ],
