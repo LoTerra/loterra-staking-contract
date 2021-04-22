@@ -305,7 +305,7 @@ fn increase_balance_with_decimals() {
 }
 
 #[test]
-fn decrease_balance() {
+fn unbond_stake() {
     let mut deps = mock_dependencies(
         20,
         &[Coin {

@@ -17,6 +17,7 @@ pub struct Config {
     pub lottery_contract: CanonicalAddr,
     pub cw20_token_contract: CanonicalAddr,
     pub reward_denom: String,
+    pub unbonding_period: u64,
 }
 
 pub fn store_config<S: Storage>(storage: &mut S, config: &Config) -> StdResult<()> {

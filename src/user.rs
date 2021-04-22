@@ -15,6 +15,8 @@ use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse};
 use crate::taxation::deduct_tax;
 use std::str::FromStr;
 use terra_cosmwasm::TerraMsgWrapper;
+use crate::claim::create_claim;
+use cw20::Expiration;
 
 pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -117,19 +119,19 @@ pub fn handle_increase_balance<S: Storage, A: Api, Q: Querier>(
     Ok(res)
 }
 
-pub fn handle_decrease_balance<S: Storage, A: Api, Q: Querier>(
+pub fn handle_unbound<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     address: HumanAddr,
     amount: Uint128,
 ) -> StdResult<HandleResponse<TerraMsgWrapper>> {
-    let config = read_config(&deps.storage)?;
-    let address_raw = deps.api.canonical_address(&address)?;
-
-    // Check sender is token contract
-    if env.message.sender != deps.api.human_address(&config.cw20_token_contract)? {
+    // Check address is sender
+    if env.message.sender != address {
         return Err(StdError::unauthorized());
     }
+
+    let config = read_config(&deps.storage)?;
+    let address_raw = deps.api.canonical_address(&address)?;
 
     let mut state: State = read_state(&deps.storage)?;
     let mut holder: Holder = read_holder(&deps.storage, &address_raw)?;
@@ -149,10 +151,15 @@ pub fn handle_decrease_balance<S: Storage, A: Api, Q: Querier>(
 
     store_holder(&mut deps.storage, &address_raw, &holder)?;
     store_state(&mut deps.storage, &state)?;
+
+    // create claim
+    let release_height = Expiration::AtHeight(env.block.height + config.unbonding_period);
+    create_claim(&mut deps.storage, address_raw, amount, release_height)?;
+
     let res = HandleResponse {
         messages: vec![],
         log: vec![
-            log("action", "decrease_balance"),
+            log("action", "unbond_stake"),
             log("holder_address", address),
             log("amount", amount),
         ],

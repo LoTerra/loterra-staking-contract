@@ -8,6 +8,7 @@ pub struct InitMsg {
     pub lottery_contract: HumanAddr,
     pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
+    pub unbonding_period: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
