@@ -564,6 +564,90 @@ fn withdraw_stake() {
 }
 
 #[test]
+fn withdraw_stake_cap() {
+    let mut deps = mock_dependencies(
+        20,
+        &[Coin {
+            denom: "uusd".to_string(),
+            amount: Uint128(100u128),
+        }],
+    );
+
+    let init_msg = default_init();
+    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
+
+    init(&mut deps, env, init_msg).unwrap();
+
+    let msg = HandleMsg::BondStake {
+        amount: Uint128::from(100u128),
+    };
+
+    let env = mock_env("addr0000", &[]);
+    handle(&mut deps, env, msg).unwrap();
+
+    let res = query(
+        &deps,
+        QueryMsg::Holder {
+            address: HumanAddr::from("addr0000"),
+        },
+    )
+        .unwrap();
+    let holder_response: HolderResponse = from_binary(&res).unwrap();
+    assert_eq!(
+        holder_response,
+        HolderResponse {
+            address: HumanAddr::from("addr0000"),
+            balance: Uint128::from(100u128),
+            index: Decimal::zero(),
+            pending_rewards: Decimal::zero(),
+        }
+    );
+
+    // claimed_rewards = 100, total_balance = 100
+    // global_index == 1
+    let env = mock_env(MOCK_HUB_CONTRACT_ADDR, &[]);
+    let msg = HandleMsg::UpdateGlobalIndex {};
+    handle(&mut deps, env, msg).unwrap();
+
+    let msg = HandleMsg::ClaimRewards { recipient: None };
+    let env = mock_env("addr0000", &[]);
+    let res = handle(&mut deps, env, msg).unwrap();
+    assert_eq!(
+        res.messages,
+        vec![CosmosMsg::Bank(BankMsg::Send {
+            from_address: HumanAddr::from(MOCK_CONTRACT_ADDR),
+            to_address: HumanAddr::from("addr0000"),
+            amount: vec![Coin {
+                denom: "uusd".to_string(),
+                amount: Uint128::from(99u128), // 1% tax
+            }]
+        })]
+    );
+
+    // withdraw stake
+    let msg = HandleMsg::UnbondStake{ amount: Uint128::from(100u128) };
+    let mut env = mock_env("addr0000", &[]);
+    env.block.height = 5;
+    handle(&mut deps, env, msg).unwrap();
+
+    // withdraw works after unbonding period
+    let msg = HandleMsg::WithdrawStake{ cap: Some(Uint128::from(50u128))};
+    let mut env = mock_env("addr0000", &[]);
+    env.block.height = 10000;
+    let res = handle(&mut deps, env, msg).unwrap();
+
+    let cw20_transfer_msg = Cw20HandleMsg::Transfer { recipient: HumanAddr::from("addr0000"), amount: Uint128::from(50u128) };
+    assert_eq!(
+        res.messages,
+        vec![CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
+            msg: to_binary(&cw20_transfer_msg).unwrap(),
+            send: vec![]
+        })]
+    );
+}
+
+#[test]
 fn claim_rewards_with_decimals() {
     let mut deps = mock_dependencies(
         20,
