@@ -189,7 +189,7 @@ pub fn handle_unbound<S: Storage, A: Api, Q: Querier>(
     let res = HandleResponse {
         messages: vec![],
         log: vec![
-            log("action", "unbond_lota_stake"),
+            log("action", "unbond_stake"),
             log("holder_address", env.message.sender),
             log("amount", amount),
         ],
