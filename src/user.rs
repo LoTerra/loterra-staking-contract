@@ -87,20 +87,39 @@ fn encode_msg_execute(msg: QueryMsg, address: HumanAddr) -> StdResult<CosmosMsg>
     }
         .into())
 }
-pub fn handle_increase_balance<S: Storage, A: Api, Q: Querier>(
+pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-    address: HumanAddr,
     amount: Uint128,
 ) -> StdResult<HandleResponse<TerraMsgWrapper>> {
     let config = read_config(&deps.storage)?;
-    let address_raw = deps.api.canonical_address(&address)?;
+    let address_raw = deps.api.canonical_address(&env.message.sender)?;
     let sender = env.message.sender;
 
-    // Check sender is token contract
-    if sender != deps.api.human_address(&config.cw20_token_addr)? {
-        return Err(StdError::unauthorized());
+    /*if state.safe_lock {
+        return Err(StdError::generic_err(
+            "Contract deactivated for update or/and preventing security issue",
+        ));
+    }*/
+
+    if !env.message.sent_funds.is_empty() {
+        return Err(StdError::generic_err("Do not send funds with stake"));
     }
+    if amount.is_zero() {
+        return Err(StdError::generic_err("Amount required"));
+    }
+    // Prepare msg to send
+    let msg = QueryMsg::TransferFrom {
+        owner: sender.clone(),
+        recipient: env.contract.address.clone(),
+        amount,
+    };
+    // Convert config address of LoTerra cw-20 to human readable
+    let loterra_human = deps
+        .api
+        .human_address(&config.cw20_token_addr)?;
+    // Prepare the message
+    let res = encode_msg_execute(msg, loterra_human)?;
 
     let mut state: State = read_state(&deps.storage)?;
     let mut holder: Holder = read_holder(&deps.storage, &address_raw)?;
@@ -118,8 +137,8 @@ pub fn handle_increase_balance<S: Storage, A: Api, Q: Querier>(
     let res = HandleResponse {
         messages: vec![],
         log: vec![
-            log("action", "increase_balance"),
-            log("holder_address", address),
+            log("action", "bond-lota-stake"),
+            log("holder_address", sender),
             log("amount", amount),
         ],
         data: None,

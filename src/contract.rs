@@ -1,7 +1,7 @@
 use crate::global::{handle_update_global_index};
 use crate::state::{read_config, read_state, store_config, store_state, Config, State};
 use crate::user::{
-    handle_claim_rewards, handle_unbound, handle_increase_balance, query_accrued_rewards,
+    handle_claim_rewards, handle_unbound, handle_bond, query_accrued_rewards,
     query_holder, query_holders,
 };
 use cosmwasm_std::{
@@ -48,10 +48,10 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     match msg {
         HandleMsg::ClaimRewards { recipient } => handle_claim_rewards(deps, env, recipient),
         HandleMsg::UpdateGlobalIndex {} => handle_update_global_index(deps, env),
-        HandleMsg::IncreaseBalance { address, amount } => {
-            handle_increase_balance(deps, env, address, amount)
+        HandleMsg::BondBalance { amount } => {
+            handle_bond(deps, env, amount)
         }
-        HandleMsg::UnbondBalance { address, amount } => {
+        HandleMsg::UnbondBalance { amount } => {
             handle_unbound(deps, env, amount)
         }
     }

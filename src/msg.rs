@@ -28,11 +28,11 @@ pub enum HandleMsg {
     /// Increase user staking balance
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
-    IncreaseBalance { address: HumanAddr, amount: Uint128 },
+    BondBalance { amount: Uint128 },
     /// Unbound user staking balance
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
-    UnbondBalance { address: HumanAddr, amount: Uint128 },
+    UnbondBalance { amount: Uint128 },
 
     ////////////////////
     /// User's operations
