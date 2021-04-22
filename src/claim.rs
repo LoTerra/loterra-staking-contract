@@ -67,7 +67,7 @@ pub fn claim_tokens<S: Storage>(
     let mut to_send = Uint128(0);
     claim_storage(storage).update(addr.as_slice(), |old| -> StdResult<_> {
         let (_send, waiting): (Vec<_>, _) =
-            claiming.unwrap_or_default().iter().cloned().partition(|c| {
+            claim.unwrap_or_default().iter().cloned().partition(|c| {
                 // if mature and we can pay fully, then include in _send
                 if c.release_at.is_expired(block) {
                     if let Some(limit) = cap {
