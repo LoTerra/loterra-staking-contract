@@ -75,8 +75,10 @@ pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     })
 }
 
-// Encode and prepare message to perfom a TransferFrom cw-20 LOTA contract in order to transfer
-// staker LOTA to staking contract funds are locked as a custodian
+/*
+    Encode and prepare message to perfom a TransferFrom cw-20 LOTA contract in order to transfer
+    staker LOTA to staking contract funds are locked as a custodian
+*/
 fn encode_msg_execute(msg: QueryMsg, address: HumanAddr) -> StdResult<CosmosMsg> {
     Ok(WasmMsg::Execute {
         contract_addr: address,
