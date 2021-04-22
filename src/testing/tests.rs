@@ -319,7 +319,7 @@ fn decrease_balance() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::DecreaseBalance {
+    let msg = HandleMsg::UnbondBalance {
         address: HumanAddr::from("addr0000"),
         amount: Uint128::from(100u128),
     };
@@ -358,7 +358,7 @@ fn decrease_balance() {
     handle(&mut deps, env, msg).unwrap();
 
     let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
-    let msg = HandleMsg::DecreaseBalance {
+    let msg = HandleMsg::UnbondBalance {
         address: HumanAddr::from("addr0000"),
         amount: Uint128::from(100u128),
     };

@@ -47,7 +47,7 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
         HandleMsg::IncreaseBalance { address, amount } => {
             handle_increase_balance(deps, env, address, amount)
         }
-        HandleMsg::DecreaseBalance { address, amount } => {
+        HandleMsg::UnbondBalance { address, amount } => {
             handle_decrease_balance(deps, env, address, amount)
         }
     }

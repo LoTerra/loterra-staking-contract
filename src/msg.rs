@@ -28,16 +28,16 @@ pub enum HandleMsg {
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
     IncreaseBalance { address: HumanAddr, amount: Uint128 },
-    /// Decrease user staking balance
+    /// Unbound user staking balance
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
-    DecreaseBalance { address: HumanAddr, amount: Uint128 },
+    UnbondBalance { address: HumanAddr, amount: Uint128 },
 
     ////////////////////
     /// User's operations
     ///////////////////
 
-    /// return the accrued reward in uusd to the user.
+    /// return the accrued reward in usdt to the user.
     ClaimRewards { recipient: Option<HumanAddr> },
 }
 
