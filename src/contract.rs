@@ -44,10 +44,10 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     match msg {
         HandleMsg::ClaimRewards { recipient } => handle_claim_rewards(deps, env, recipient),
         HandleMsg::UpdateGlobalIndex {} => handle_update_global_index(deps, env),
-        HandleMsg::BondBalance { amount } => {
+        HandleMsg::BondStake { amount } => {
             handle_bond(deps, env, amount)
         }
-        HandleMsg::UnbondBalance { amount } => {
+        HandleMsg::UnbondStake { amount } => {
             handle_unbound(deps, env, amount)
         }
     }

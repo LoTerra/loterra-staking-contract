@@ -26,14 +26,18 @@ pub enum HandleMsg {
     /// Staking operations
     ///////////////////
 
-    /// Increase user staking balance
+    /// Bond stake user staking balance
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
-    BondBalance { amount: Uint128 },
+    BondStake { amount: Uint128 },
     /// Unbound user staking balance
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
-    UnbondBalance { amount: Uint128 },
+    UnbondStake { amount: Uint128 },
+
+    /// Unbound user staking balance
+    /// Withdraws released stake
+    WithdrawStake { amount: Uint128 },
 
     ////////////////////
     /// User's operations

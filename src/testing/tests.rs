@@ -154,7 +154,7 @@ fn increase_balance() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondBalance{
+    let msg = HandleMsg::BondStake {
         amount: Uint128::from(100u128),
     };
 
@@ -193,7 +193,7 @@ fn increase_balance() {
     handle(&mut deps, env, msg).unwrap();
 
     let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
-    let msg = HandleMsg::BondBalance {
+    let msg = HandleMsg::BondStake {
         amount: Uint128::from(100u128),
     };
     handle(&mut deps, env, msg).unwrap();
@@ -232,7 +232,7 @@ fn increase_balance_with_decimals() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondBalance {
+    let msg = HandleMsg::BondStake {
         amount: Uint128::from(11u128),
     };
 
@@ -271,7 +271,7 @@ fn increase_balance_with_decimals() {
     handle(&mut deps, env, msg).unwrap();
 
     let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
-    let msg = HandleMsg::BondBalance {
+    let msg = HandleMsg::BondStake {
         amount: Uint128::from(10u128),
     };
     handle(&mut deps, env, msg).unwrap();
@@ -318,7 +318,7 @@ fn unbond_stake() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::UnbondBalance {
+    let msg = HandleMsg::UnbondStake {
         amount: Uint128::from(100u128),
     };
 
@@ -341,7 +341,7 @@ fn unbond_stake() {
     };
 
     // Increase balance first
-    let msg = HandleMsg::BondBalance {
+    let msg = HandleMsg::BondStake {
         amount: Uint128::from(100u128),
     };
 
@@ -355,7 +355,7 @@ fn unbond_stake() {
     handle(&mut deps, env, msg).unwrap();
 
     let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
-    let msg = HandleMsg::UnbondBalance {
+    let msg = HandleMsg::UnbondStake {
         amount: Uint128::from(100u128),
     };
     handle(&mut deps, env, msg).unwrap();
@@ -394,7 +394,7 @@ fn claim_rewards() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondBalance {
+    let msg = HandleMsg::BondStake {
         amount: Uint128::from(100u128),
     };
 
@@ -480,7 +480,7 @@ fn claim_rewards_with_decimals() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondBalance {
+    let msg = HandleMsg::BondStake {
         amount: Uint128::from(11u128),
     };
 
@@ -576,19 +576,19 @@ fn query_holders() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondBalance {
+    let msg = HandleMsg::BondStake {
         amount: Uint128::from(100u128),
     };
 
     let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
     handle(&mut deps, env.clone(), msg).unwrap();
 
-    let msg = HandleMsg::BondBalance {
+    let msg = HandleMsg::BondStake {
         amount: Uint128::from(200u128),
     };
 
     handle(&mut deps, env.clone(), msg).unwrap();
-    let msg = HandleMsg::BondBalance {
+    let msg = HandleMsg::BondStake {
         amount: Uint128::from(300u128),
     };
 
