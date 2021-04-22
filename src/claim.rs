@@ -57,7 +57,10 @@ pub fn create_claim<S: Storage>(
 
 /// This iterates over all mature claims for the address, and removes them, up to an optional cap.
 /// it removes the finished claims and returns the total amount of tokens to be released.
-
+/*
+    TODO: claim stake need a Transfer WasmMsg::Execute in order
+     to transfer cw-20 from the staking contract to claimer address
+ */
 pub fn claim_tokens<S: Storage>(
     storage: &mut S,
     addr: CanonicalAddr,

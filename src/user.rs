@@ -95,7 +95,9 @@ pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
     let config = read_config(&deps.storage)?;
     let address_raw = deps.api.canonical_address(&env.message.sender)?;
     let sender = env.message.sender;
-
+    /*
+        TODO: Add safe_lock
+     */
     /*if state.safe_lock {
         return Err(StdError::generic_err(
             "Contract deactivated for update or/and preventing security issue",
@@ -155,6 +157,10 @@ pub fn handle_unbound<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<HandleResponse<TerraMsgWrapper>> {
     let config = read_config(&deps.storage)?;
     let address_raw = deps.api.canonical_address(&env.message.sender)?;
+
+    /*
+        TODO: Add safe_lock
+     */
     /*if state.safe_lock {
         return Err(StdError::generic_err(
             "Contract deactivated for update or/and preventing security issue",
