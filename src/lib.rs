@@ -6,8 +6,8 @@ mod math;
 mod taxation;
 mod user;
 
-mod claim;
-mod msg;
+pub mod claim;
+pub mod msg;
 #[cfg(test)]
 mod testing;
 #[cfg(target_arch = "wasm32")]
