@@ -22,7 +22,6 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
         cw20_token_addr: deps.api.canonical_address(&msg.cw20_token_addr)?,
         reward_denom: msg.reward_denom,
         unbonding_period: msg.unbonding_period,
-        safe_lock: msg.safe_lock,
     };
 
     store_config(&mut deps.storage, &conf)?;

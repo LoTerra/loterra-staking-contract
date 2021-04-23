@@ -86,13 +86,6 @@ pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
     let address_raw = deps.api.canonical_address(&env.message.sender)?;
     let sender = env.message.sender;
 
-    // if safe lock is on, contract is locked
-    if config.safe_lock {
-        return Err(StdError::generic_err(
-            "Contract deactivated for update or/and preventing security issue",
-        ));
-    }
-
     if !env.message.sent_funds.is_empty() {
         return Err(StdError::generic_err("Do not send funds with stake"));
     }
@@ -148,12 +141,6 @@ pub fn handle_unbound<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<HandleResponse> {
     let config = read_config(&deps.storage)?;
     let address_raw = deps.api.canonical_address(&env.message.sender)?;
-
-    if config.safe_lock {
-        return Err(StdError::generic_err(
-            "Contract deactivated for update or/and preventing security issue",
-        ));
-    }
 
     if !env.message.sent_funds.is_empty() {
         return Err(StdError::generic_err("Do not send funds with stake"));

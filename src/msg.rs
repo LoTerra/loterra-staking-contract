@@ -9,7 +9,6 @@ pub struct InitMsg {
     pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
     pub unbonding_period: u64,
-    pub safe_lock: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
