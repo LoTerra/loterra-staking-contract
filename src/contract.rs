@@ -14,11 +14,10 @@ use crate::msg::{ConfigResponse, HandleMsg, InitMsg, MigrateMsg, QueryMsg, State
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
-    env: Env,
+    _env: Env,
     msg: InitMsg,
 ) -> StdResult<InitResponse> {
     let conf = Config {
-        admin: deps.api.canonical_address(&env.message.sender)?,
         cw20_token_addr: deps.api.canonical_address(&msg.cw20_token_addr)?,
         reward_denom: msg.reward_denom,
         unbonding_period: msg.unbonding_period,
