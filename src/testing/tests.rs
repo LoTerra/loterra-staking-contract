@@ -60,7 +60,6 @@ fn proper_init() {
     assert_eq!(
         config_response,
         ConfigResponse {
-            admin: HumanAddr::from(MOCK_HUB_CONTRACT_ADDR),
             cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
             reward_denom: DEFAULT_REWARD_DENOM.to_string(),
             unbonding_period: 0

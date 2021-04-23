@@ -71,7 +71,6 @@ fn query_config<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<ConfigResponse> {
     let config: Config = read_config(&deps.storage)?;
     Ok(ConfigResponse {
-        admin: deps.api.human_address(&config.admin)?,
         cw20_token_addr: deps.api.human_address(&config.cw20_token_addr)?,
         reward_denom: config.reward_denom,
         unbonding_period: 0,
