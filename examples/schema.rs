@@ -13,6 +13,7 @@ fn main() {
     remove_schemas(&out_dir).unwrap();
 
     export_schema(&schema_for!(HandleMsg), &out_dir);
+    export_schema(&schema_for!(ReceiveMsg), &out_dir);
     export_schema(&schema_for!(InitMsg), &out_dir);
     export_schema(&schema_for!(QueryMsg), &out_dir);
     export_schema(&schema_for!(ConfigResponse), &out_dir);
