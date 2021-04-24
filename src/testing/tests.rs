@@ -18,10 +18,7 @@
 //! 4. Anywhere you see query(&deps, ...) you must replace it with query(&mut deps, ...)
 
 use cosmwasm_std::testing::{mock_env, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{
-    from_binary, to_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, HumanAddr, StdError, Uint128,
-    WasmMsg,
-};
+use cosmwasm_std::{from_binary, to_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, HumanAddr, StdError, Uint128, WasmMsg, Binary};
 
 use crate::contract::{handle, init, query};
 use crate::math::{decimal_multiplication_in_256, decimal_subtraction_in_256};
@@ -95,14 +92,6 @@ fn update_global_index() {
 
     let msg = HandleMsg::UpdateGlobalIndex {};
 
-    // Failed unauthorized try
-    let env = mock_env("addr0000", &[]);
-    let res = handle(&mut deps, env, msg.clone());
-    match res {
-        Err(StdError::Unauthorized { .. }) => {}
-        _ => panic!("DO NOT ENTER HERE"),
-    }
-
     // Failed zero staking balance
     let env = mock_env(MOCK_HUB_CONTRACT_ADDR, &[]);
     let res = handle(&mut deps, env.clone(), msg.clone());
@@ -142,11 +131,10 @@ fn increase_balance() {
     let mut deps = mock_dependencies(
         20,
         &[Coin {
-            denom: "uusd".to_string(),
+            denom: DEFAULT_REWARD_DENOM.to_string(),
             amount: Uint128(100u128),
         }],
     );
-
     let init_msg = default_init();
     let env = mock_env("addr0000", &[]);
 
@@ -157,13 +145,6 @@ fn increase_balance() {
     };
 
     let env = mock_env("addr0000", &[]);
-    let res = handle(&mut deps, env, msg.clone());
-    match res {
-        Err(StdError::Unauthorized { .. }) => {}
-        _ => panic!("DO NOT ENTER HERE"),
-    };
-
-    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
     handle(&mut deps, env, msg).unwrap();
 
     let res = query(
@@ -186,11 +167,11 @@ fn increase_balance() {
 
     // claimed_rewards = 100, total_balance = 100
     // global_index == 1
-    let env = mock_env(MOCK_HUB_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     let msg = HandleMsg::UpdateGlobalIndex {};
     handle(&mut deps, env, msg).unwrap();
 
-    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     let msg = HandleMsg::BondStake {
         amount: Uint128::from(100u128),
     };
@@ -235,13 +216,6 @@ fn increase_balance_with_decimals() {
     };
 
     let env = mock_env("addr0000", &[]);
-    let res = handle(&mut deps, env, msg.clone());
-    match res {
-        Err(StdError::Unauthorized { .. }) => {}
-        _ => panic!("DO NOT ENTER HERE"),
-    };
-
-    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
     handle(&mut deps, env, msg).unwrap();
 
     let res = query(
@@ -264,11 +238,11 @@ fn increase_balance_with_decimals() {
 
     // claimed_rewards = 100000 , total_balance = 11
     // global_index == 9077.727272727272727272
-    let env = mock_env(MOCK_HUB_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     let msg = HandleMsg::UpdateGlobalIndex {};
     handle(&mut deps, env, msg).unwrap();
 
-    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     let msg = HandleMsg::BondStake {
         amount: Uint128::from(10u128),
     };
@@ -320,16 +294,8 @@ fn unbond_stake() {
         amount: Uint128::from(100u128),
     };
 
-    // Failed unautorized
-    let env = mock_env("addr0000", &[]);
-    let res = handle(&mut deps, env, msg.clone());
-    match res {
-        Err(StdError::Unauthorized { .. }) => {}
-        _ => panic!("DO NOT ENTER HERE"),
-    };
-
     // Failed underflow
-    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     let res = handle(&mut deps, env, msg);
     match res {
         Err(StdError::GenericErr { msg, .. }) => {
@@ -343,16 +309,16 @@ fn unbond_stake() {
         amount: Uint128::from(100u128),
     };
 
-    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     handle(&mut deps, env, msg).unwrap();
 
     // claimed_rewards = 100, total_balance = 100
     // global_index == 1
-    let env = mock_env(MOCK_HUB_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     let msg = HandleMsg::UpdateGlobalIndex {};
     handle(&mut deps, env, msg).unwrap();
 
-    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     let msg = HandleMsg::UnbondStake {
         amount: Uint128::from(100u128),
     };
@@ -580,7 +546,7 @@ fn withdraw_stake_cap() {
     );
 
     let init_msg = default_init();
-    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
 
     init(&mut deps, env, init_msg).unwrap();
 
@@ -611,7 +577,7 @@ fn withdraw_stake_cap() {
 
     // claimed_rewards = 100, total_balance = 100
     // global_index == 1
-    let env = mock_env(MOCK_HUB_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     let msg = HandleMsg::UpdateGlobalIndex {};
     handle(&mut deps, env, msg).unwrap();
 
@@ -679,7 +645,7 @@ fn claim_rewards_with_decimals() {
         amount: Uint128::from(11u128),
     };
 
-    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     handle(&mut deps, env, msg).unwrap();
 
     let res = query(
@@ -775,18 +741,18 @@ fn query_holders() {
         amount: Uint128::from(100u128),
     };
 
-    let env = mock_env(MOCK_TOKEN_CONTRACT_ADDR, &[]);
+    let env = mock_env("addr0000", &[]);
     handle(&mut deps, env.clone(), msg).unwrap();
 
     let msg = HandleMsg::BondStake {
         amount: Uint128::from(200u128),
     };
-
+    let env = mock_env("addr0001", &[]);
     handle(&mut deps, env.clone(), msg).unwrap();
     let msg = HandleMsg::BondStake {
         amount: Uint128::from(300u128),
     };
-
+    let env = mock_env("addr0002", &[]);
     handle(&mut deps, env, msg).unwrap();
 
     let res = query(
