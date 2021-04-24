@@ -26,13 +26,14 @@ use cosmwasm_std::{
 use crate::contract::{handle, init, query};
 use crate::math::{decimal_multiplication_in_256, decimal_subtraction_in_256};
 use crate::msg::{
-    ConfigResponse, HandleMsg, HolderResponse, HoldersResponse, InitMsg, QueryMsg, StateResponse,
+    ConfigResponse, HandleMsg, HolderResponse, HoldersResponse, InitMsg, QueryMsg, ReceiveMsg,
+    StateResponse,
 };
 use crate::state::{store_holder, store_state, Holder, State};
 use crate::testing::mock_querier::{
     mock_dependencies, MOCK_CW20_CONTRACT_ADDR, MOCK_HUB_CONTRACT_ADDR, MOCK_TOKEN_CONTRACT_ADDR,
 };
-use cw20::Cw20HandleMsg;
+use cw20::{Cw20HandleMsg, Cw20ReceiveMsg};
 use std::str::FromStr;
 
 const DEFAULT_REWARD_DENOM: &str = "uusd";
@@ -43,6 +44,16 @@ fn default_init() -> InitMsg {
         reward_denom: DEFAULT_REWARD_DENOM.to_string(),
         unbonding_period: 1000,
     }
+}
+
+fn receive_stake_msg(sender: &str, amount: u128) -> HandleMsg {
+    let bond_msg = ReceiveMsg::BondStake {};
+    let cw20_receive_msg = Cw20ReceiveMsg {
+        sender: HumanAddr::from(sender),
+        amount: Uint128(amount),
+        msg: Some(to_binary(&bond_msg).unwrap()),
+    };
+    HandleMsg::Receive(cw20_receive_msg)
 }
 
 #[test]
@@ -143,12 +154,9 @@ fn increase_balance() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(100u128),
-    };
-
-    let env = mock_env("addr0000", &[]);
-    handle(&mut deps, env, msg).unwrap();
+    let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
+    let receive_msg = receive_stake_msg("addr0000", 100);
+    handle(&mut deps, env, receive_msg.clone()).unwrap();
 
     let res = query(
         &deps,
@@ -175,10 +183,7 @@ fn increase_balance() {
     handle(&mut deps, env, msg).unwrap();
 
     let env = mock_env("addr0000", &[]);
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(100u128),
-    };
-    handle(&mut deps, env, msg).unwrap();
+    handle(&mut deps, env, receive_msg).unwrap();
 
     let res = query(
         &deps,
@@ -214,12 +219,9 @@ fn increase_balance_with_decimals() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(11u128),
-    };
-
-    let env = mock_env("addr0000", &[]);
-    handle(&mut deps, env, msg).unwrap();
+    let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
+    let receive_msg = receive_stake_msg("addr0000", 100);
+    handle(&mut deps, env, receive_msg.clone()).unwrap();
 
     let res = query(
         &deps,
@@ -246,10 +248,7 @@ fn increase_balance_with_decimals() {
     handle(&mut deps, env, msg).unwrap();
 
     let env = mock_env("addr0000", &[]);
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(10u128),
-    };
-    handle(&mut deps, env, msg).unwrap();
+    handle(&mut deps, env, receive_msg).unwrap();
 
     let res = query(
         &deps,
@@ -307,13 +306,9 @@ fn unbond_stake() {
         _ => panic!("DO NOT ENTER HERE"),
     };
 
-    // Increase balance first
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(100u128),
-    };
-
-    let env = mock_env("addr0000", &[]);
-    handle(&mut deps, env, msg).unwrap();
+    let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
+    let receive_msg = receive_stake_msg("addr0000", 100);
+    handle(&mut deps, env, receive_msg.clone()).unwrap();
 
     // claimed_rewards = 100, total_balance = 100
     // global_index == 1
@@ -361,12 +356,9 @@ fn claim_rewards() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(100u128),
-    };
-
-    let env = mock_env("addr0000", &[]);
-    handle(&mut deps, env, msg).unwrap();
+    let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
+    let receive_msg = receive_stake_msg("addr0000", 100);
+    handle(&mut deps, env, receive_msg.clone()).unwrap();
 
     let res = query(
         &deps,
@@ -447,12 +439,9 @@ fn withdraw_stake() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(100u128),
-    };
-
-    let env = mock_env("addr0000", &[]);
-    handle(&mut deps, env, msg).unwrap();
+    let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
+    let receive_msg = receive_stake_msg("addr0000", 100);
+    handle(&mut deps, env, receive_msg.clone()).unwrap();
 
     let res = query(
         &deps,
@@ -549,12 +538,9 @@ fn withdraw_stake_cap() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(100u128),
-    };
-
-    let env = mock_env("addr0000", &[]);
-    handle(&mut deps, env, msg).unwrap();
+    let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
+    let receive_msg = receive_stake_msg("addr0000", 100);
+    handle(&mut deps, env, receive_msg.clone()).unwrap();
 
     let res = query(
         &deps,
@@ -614,9 +600,12 @@ fn withdraw_stake_cap() {
         Err(StdError::GenericErr {
             msg,
             backtrace: None,
-        }) => assert_eq!(msg, "Wait for the unbonding period"),
-
-        _ => panic!("Unexpected error"),
+        }) => {
+            assert_eq!(msg, "Wait for the unbonding period");
+        }
+        _ => {
+            panic!("Unexpected error")
+        }
     }
 
     let msg = HandleMsg::WithdrawStake {
@@ -655,12 +644,9 @@ fn claim_rewards_with_decimals() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(11u128),
-    };
-
-    let env = mock_env("addr0000", &[]);
-    handle(&mut deps, env, msg).unwrap();
+    let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
+    let receive_msg = receive_stake_msg("addr0000", 100);
+    handle(&mut deps, env, receive_msg.clone()).unwrap();
 
     let res = query(
         &deps,
@@ -751,23 +737,17 @@ fn query_holders() {
 
     init(&mut deps, env, init_msg).unwrap();
 
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(100u128),
-    };
+    let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
+    let receive_msg = receive_stake_msg("addr0000", 100);
+    handle(&mut deps, env, receive_msg.clone()).unwrap();
 
-    let env = mock_env("addr0000", &[]);
-    handle(&mut deps, env.clone(), msg).unwrap();
+    let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
+    let receive_msg = receive_stake_msg("addr0001", 200);
+    handle(&mut deps, env, receive_msg.clone()).unwrap();
 
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(200u128),
-    };
-    let env = mock_env("addr0001", &[]);
-    handle(&mut deps, env.clone(), msg).unwrap();
-    let msg = HandleMsg::BondStake {
-        amount: Uint128::from(300u128),
-    };
-    let env = mock_env("addr0002", &[]);
-    handle(&mut deps, env, msg).unwrap();
+    let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
+    let receive_msg = receive_stake_msg("addr0002", 300);
+    handle(&mut deps, env, receive_msg.clone()).unwrap();
 
     let res = query(
         &deps,

@@ -4,17 +4,17 @@ use crate::state::{
 };
 
 use cosmwasm_std::{
-    log, to_binary, Api, BankMsg, Coin, Decimal, Env, Extern, HandleResponse, HumanAddr, Querier,
-    StdError, StdResult, Storage, Uint128, WasmMsg,
+    from_binary, log, to_binary, Api, BankMsg, Coin, Decimal, Env, Extern, HandleResponse,
+    HumanAddr, Querier, StdError, StdResult, Storage, Uint128, WasmMsg,
 };
 
 use crate::claim::{claim_tokens, create_claim};
 use crate::math::{
     decimal_multiplication_in_256, decimal_subtraction_in_256, decimal_summation_in_256,
 };
-use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse};
+use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse, ReceiveMsg};
 use crate::taxation::deduct_tax;
-use cw20::{Cw20HandleMsg, Expiration};
+use cw20::{Cw20HandleMsg, Cw20ReceiveMsg, Expiration};
 use std::str::FromStr;
 
 pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
@@ -77,21 +77,46 @@ pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     })
 }
 
+pub fn handle_receive<S: Storage, A: Api, Q: Querier>(
+    deps: &mut Extern<S, A, Q>,
+    env: Env,
+    wrapper: Cw20ReceiveMsg,
+) -> StdResult<HandleResponse> {
+    let config = read_config(&deps.storage)?;
+
+    // only loterra cw20 contract can send receieve msg
+    if env.message.sender != deps.api.human_address(&config.cw20_token_addr)? {
+        return Err(StdError::GenericErr {
+            msg: "only loterra contract can send receive messages".to_string(),
+            backtrace: None,
+        });
+    }
+
+    let msg: ReceiveMsg = match wrapper.msg {
+        Some(bin) => from_binary(&bin),
+        None => Err(StdError::parse_err("ReceiveMsg", "no data")),
+    }?;
+
+    let holder_addr = wrapper.sender;
+    match msg {
+        ReceiveMsg::BondStake {} => handle_bond(deps, env, holder_addr, wrapper.amount),
+    }
+}
+
 pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
+    holder_addr: HumanAddr,
     amount: Uint128,
 ) -> StdResult<HandleResponse> {
-    let config = read_config(&deps.storage)?;
-    let address_raw = deps.api.canonical_address(&env.message.sender)?;
-    let sender = env.message.sender;
-
     if !env.message.sent_funds.is_empty() {
         return Err(StdError::generic_err("Do not send funds with stake"));
     }
     if amount.is_zero() {
         return Err(StdError::generic_err("Amount required"));
     }
+
+    let address_raw = deps.api.canonical_address(&holder_addr)?;
 
     let mut state: State = read_state(&deps.storage)?;
     let mut holder: Holder = read_holder(&deps.storage, &address_raw)?;
@@ -107,25 +132,11 @@ pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
     store_holder(&mut deps.storage, &address_raw, &holder)?;
     store_state(&mut deps.storage, &state)?;
 
-    // Convert config address of LoTerra cw-20 to human readable
-    let cw20_token_address = deps.api.human_address(&config.cw20_token_addr)?;
-
-    let transfer_from_msg = Cw20HandleMsg::TransferFrom {
-        owner: sender.clone(),
-        recipient: env.contract.address,
-        amount,
-    };
-    let msg = WasmMsg::Execute {
-        contract_addr: cw20_token_address,
-        msg: to_binary(&transfer_from_msg)?,
-        send: vec![],
-    };
-
     let res = HandleResponse {
-        messages: vec![msg.into()],
+        messages: vec![],
         log: vec![
             log("action", "bond_stake"),
-            log("holder_address", sender),
+            log("holder_address", holder_addr),
             log("amount", amount),
         ],
         data: None,

@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::{Decimal, HumanAddr, Uint128};
+use cw20::Cw20ReceiveMsg;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitMsg {
@@ -24,10 +25,6 @@ pub enum HandleMsg {
     /// Staking operations
     ///////////////////
 
-    /// Bond stake user staking balance
-    /// Withdraw rewards to pending rewards
-    /// Set current reward index to global index
-    BondStake { amount: Uint128 },
     /// Unbound user staking balance
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
@@ -43,6 +40,18 @@ pub enum HandleMsg {
 
     /// return the accrued reward in usdt to the user.
     ClaimRewards { recipient: Option<HumanAddr> },
+
+    /// This accepts a properly-encoded ReceiveMsg from a cw20 contract
+    Receive(Cw20ReceiveMsg),
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ReceiveMsg {
+    /// Bond stake user staking balance
+    /// Withdraw rewards to pending rewards
+    /// Set current reward index to global index
+    BondStake {},
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
