@@ -604,12 +604,9 @@ mod tests {
             Err(StdError::GenericErr {
                 msg,
                 backtrace: None,
-            }) => {
-                assert_eq!(msg, "Wait for the unbonding period");
-            }
-            _ => {
-                panic!("Unexpected error")
-            }
+            }) => assert_eq!(msg, "Wait for the unbonding period"),
+
+            _ => panic!("Unexpected error"),
         }
 
         let msg = HandleMsg::WithdrawStake {
