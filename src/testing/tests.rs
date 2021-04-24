@@ -18,7 +18,10 @@
 //! 4. Anywhere you see query(&deps, ...) you must replace it with query(&mut deps, ...)
 
 use cosmwasm_std::testing::{mock_env, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{from_binary, to_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, HumanAddr, StdError, Uint128, WasmMsg, Binary};
+use cosmwasm_std::{
+    from_binary, to_binary, Api, BankMsg, Binary, Coin, CosmosMsg, Decimal, HumanAddr, StdError,
+    Uint128, WasmMsg,
+};
 
 use crate::contract::{handle, init, query};
 use crate::math::{decimal_multiplication_in_256, decimal_subtraction_in_256};
@@ -613,9 +616,9 @@ fn withdraw_stake_cap() {
     let res = handle(&mut deps, env, msg);
     match res {
         Err(StdError::GenericErr {
-                msg,
-                backtrace: None,
-            }) => {
+            msg,
+            backtrace: None,
+        }) => {
             assert_eq!(msg, "Wait for the unbonding period");
         }
         _ => {
