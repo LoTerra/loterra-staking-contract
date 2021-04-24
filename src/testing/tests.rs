@@ -604,17 +604,35 @@ fn withdraw_stake_cap() {
     env.block.height = 5;
     handle(&mut deps, env, msg).unwrap();
 
-    // withdraw works after unbonding period
+    // cap is less then release, wait for more to unbond
     let msg = HandleMsg::WithdrawStake {
         cap: Some(Uint128::from(50u128)),
     };
     let mut env = mock_env("addr0000", &[]);
-    env.block.height = 10000;
+    env.block.height = 100000;
+    let res = handle(&mut deps, env, msg);
+    match res {
+        Err(StdError::GenericErr {
+                msg,
+                backtrace: None,
+            }) => {
+            assert_eq!(msg, "Wait for the unbonding period");
+        }
+        _ => {
+            panic!("Unexpected error")
+        }
+    }
+
+    let msg = HandleMsg::WithdrawStake {
+        cap: Some(Uint128::from(150u128)),
+    };
+    let mut env = mock_env("addr0000", &[]);
+    env.block.height = 100000;
     let res = handle(&mut deps, env, msg).unwrap();
 
     let cw20_transfer_msg = Cw20HandleMsg::Transfer {
         recipient: HumanAddr::from("addr0000"),
-        amount: Uint128::from(50u128),
+        amount: Uint128::from(100u128),
     };
     assert_eq!(
         res.messages,
