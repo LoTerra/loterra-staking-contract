@@ -19,8 +19,8 @@
 
 use cosmwasm_std::testing::{mock_env, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    from_binary, to_binary, Api, BankMsg, Binary, Coin, CosmosMsg, Decimal, HumanAddr, StdError,
-    Uint128, WasmMsg,
+    from_binary, to_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, HumanAddr, StdError, Uint128,
+    WasmMsg,
 };
 
 use crate::contract::{handle, init, query};
