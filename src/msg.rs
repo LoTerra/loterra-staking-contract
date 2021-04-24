@@ -5,9 +5,9 @@ use cosmwasm_std::{Decimal, HumanAddr, Uint128};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitMsg {
-    pub hub_contract: HumanAddr,
     pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
+    pub unbonding_period: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -17,9 +17,6 @@ pub enum HandleMsg {
     /// Owner's operations
     ///////////////////
 
-    /// Swap all of the balances to uusd.
-    SwapToRewardDenom {},
-
     /// Update the global index
     UpdateGlobalIndex {},
 
@@ -27,20 +24,24 @@ pub enum HandleMsg {
     /// Staking operations
     ///////////////////
 
-    /// Increase user staking balance
+    /// Bond stake user staking balance
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
-    IncreaseBalance { address: HumanAddr, amount: Uint128 },
-    /// Decrease user staking balance
+    BondStake { amount: Uint128 },
+    /// Unbound user staking balance
     /// Withdraw rewards to pending rewards
     /// Set current reward index to global index
-    DecreaseBalance { address: HumanAddr, amount: Uint128 },
+    UnbondStake { amount: Uint128 },
+
+    /// Unbound user staking balance
+    /// Withdraws released stake
+    WithdrawStake { cap: Option<Uint128> },
 
     ////////////////////
     /// User's operations
     ///////////////////
 
-    /// return the accrued reward in uusd to the user.
+    /// return the accrued reward in usdt to the user.
     ClaimRewards { recipient: Option<HumanAddr> },
 }
 
@@ -59,12 +60,16 @@ pub enum QueryMsg {
         start_after: Option<HumanAddr>,
         limit: Option<u32>,
     },
+    Claims {
+        address: HumanAddr,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigResponse {
-    pub hub_contract: HumanAddr,
+    pub cw20_token_addr: HumanAddr,
     pub reward_denom: String,
+    pub unbonding_period: u64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

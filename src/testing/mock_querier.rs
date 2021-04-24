@@ -3,7 +3,6 @@ use cosmwasm_std::{
     from_slice, to_binary, Coin, Decimal, Extern, HumanAddr, Querier, QuerierResult, QueryRequest,
     SystemError, Uint128,
 };
-use cosmwasm_storage::to_length_prefixed;
 use std::str::FromStr;
 use terra_cosmwasm::{
     ExchangeRateItem, ExchangeRatesResponse, TaxCapResponse, TaxRateResponse, TerraQuery,
@@ -12,7 +11,7 @@ use terra_cosmwasm::{
 
 pub const MOCK_HUB_CONTRACT_ADDR: &str = "hub";
 pub const MOCK_CW20_CONTRACT_ADDR: &str = "lottery";
-pub const MOCK_REWARD_CONTRACT_ADDR: &str = "reward";
+//pub const MOCK_REWARD_CONTRACT_ADDR: &str = "reward";
 pub const MOCK_TOKEN_CONTRACT_ADDR: &str = "token";
 
 pub fn mock_dependencies(

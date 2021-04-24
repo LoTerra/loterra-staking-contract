@@ -1,16 +1,16 @@
-use crate::global::{handle_swap, handle_update_global_index};
+use crate::global::handle_update_global_index;
 use crate::state::{read_config, read_state, store_config, store_state, Config, State};
 use crate::user::{
-    handle_claim_rewards, handle_decrease_balance, handle_increase_balance, query_accrued_rewards,
-    query_holder, query_holders,
+    handle_bond, handle_claim_rewards, handle_unbound, handle_withdraw_stake,
+    query_accrued_rewards, query_holder, query_holders,
 };
 use cosmwasm_std::{
     to_binary, Api, Binary, Decimal, Env, Extern, HandleResponse, InitResponse, MigrateResponse,
     MigrateResult, Querier, StdResult, Storage, Uint128,
 };
 
+use crate::claim::query_claims;
 use crate::msg::{ConfigResponse, HandleMsg, InitMsg, MigrateMsg, QueryMsg, StateResponse};
-use terra_cosmwasm::TerraMsgWrapper;
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -18,9 +18,9 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     msg: InitMsg,
 ) -> StdResult<InitResponse> {
     let conf = Config {
-        hub_contract: deps.api.canonical_address(&msg.hub_contract)?,
-        cw20_token_contract: deps.api.canonical_address(&msg.cw20_token_addr)?,
+        cw20_token_addr: deps.api.canonical_address(&msg.cw20_token_addr)?,
         reward_denom: msg.reward_denom,
+        unbonding_period: msg.unbonding_period,
     };
 
     store_config(&mut deps.storage, &conf)?;
@@ -40,17 +40,13 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     msg: HandleMsg,
-) -> StdResult<HandleResponse<TerraMsgWrapper>> {
+) -> StdResult<HandleResponse> {
     match msg {
         HandleMsg::ClaimRewards { recipient } => handle_claim_rewards(deps, env, recipient),
-        HandleMsg::SwapToRewardDenom {} => handle_swap(deps, env),
         HandleMsg::UpdateGlobalIndex {} => handle_update_global_index(deps, env),
-        HandleMsg::IncreaseBalance { address, amount } => {
-            handle_increase_balance(deps, env, address, amount)
-        }
-        HandleMsg::DecreaseBalance { address, amount } => {
-            handle_decrease_balance(deps, env, address, amount)
-        }
+        HandleMsg::BondStake { amount } => handle_bond(deps, env, amount),
+        HandleMsg::UnbondStake { amount } => handle_unbound(deps, env, amount),
+        HandleMsg::WithdrawStake { cap } => handle_withdraw_stake(deps, env, cap),
     }
 }
 
@@ -66,6 +62,7 @@ pub fn query<S: Storage, A: Api, Q: Querier>(
         QueryMsg::Holders { start_after, limit } => {
             to_binary(&query_holders(&deps, start_after, limit)?)
         }
+        QueryMsg::Claims { address } => to_binary(&query_claims(deps, address)?),
     }
 }
 
@@ -74,8 +71,9 @@ fn query_config<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<ConfigResponse> {
     let config: Config = read_config(&deps.storage)?;
     Ok(ConfigResponse {
-        hub_contract: deps.api.human_address(&config.hub_contract)?,
+        cw20_token_addr: deps.api.human_address(&config.cw20_token_addr)?,
         reward_denom: config.reward_denom,
+        unbonding_period: 0,
     })
 }
 

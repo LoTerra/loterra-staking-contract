@@ -4,23 +4,24 @@ use crate::state::{
 };
 
 use cosmwasm_std::{
-    log, Api, BankMsg, Coin, Decimal, Env, Extern, HandleResponse, HumanAddr, Querier, StdError,
-    StdResult, Storage, Uint128,
+    log, to_binary, Api, BankMsg, Coin, Decimal, Env, Extern, HandleResponse, HumanAddr, Querier,
+    StdError, StdResult, Storage, Uint128, WasmMsg,
 };
 
+use crate::claim::{claim_tokens, create_claim};
 use crate::math::{
     decimal_multiplication_in_256, decimal_subtraction_in_256, decimal_summation_in_256,
 };
 use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse};
 use crate::taxation::deduct_tax;
+use cw20::{Cw20HandleMsg, Expiration};
 use std::str::FromStr;
-use terra_cosmwasm::TerraMsgWrapper;
 
 pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     recipient: Option<HumanAddr>,
-) -> StdResult<HandleResponse<TerraMsgWrapper>> {
+) -> StdResult<HandleResponse> {
     let contract_addr = env.contract.address;
     let holder_addr = env.message.sender.clone();
     let holder_addr_raw = deps.api.canonical_address(&holder_addr)?;
@@ -76,19 +77,20 @@ pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     })
 }
 
-pub fn handle_increase_balance<S: Storage, A: Api, Q: Querier>(
+pub fn handle_bond<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-    address: HumanAddr,
     amount: Uint128,
-) -> StdResult<HandleResponse<TerraMsgWrapper>> {
+) -> StdResult<HandleResponse> {
     let config = read_config(&deps.storage)?;
-    let address_raw = deps.api.canonical_address(&address)?;
+    let address_raw = deps.api.canonical_address(&env.message.sender)?;
     let sender = env.message.sender;
 
-    // Check sender is token contract
-    if sender != deps.api.human_address(&config.cw20_token_contract)? {
-        return Err(StdError::unauthorized());
+    if !env.message.sent_funds.is_empty() {
+        return Err(StdError::generic_err("Do not send funds with stake"));
+    }
+    if amount.is_zero() {
+        return Err(StdError::generic_err("Amount required"));
     }
 
     let mut state: State = read_state(&deps.storage)?;
@@ -104,11 +106,26 @@ pub fn handle_increase_balance<S: Storage, A: Api, Q: Querier>(
 
     store_holder(&mut deps.storage, &address_raw, &holder)?;
     store_state(&mut deps.storage, &state)?;
+
+    // Convert config address of LoTerra cw-20 to human readable
+    let cw20_token_address = deps.api.human_address(&config.cw20_token_addr)?;
+
+    let transfer_from_msg = Cw20HandleMsg::TransferFrom {
+        owner: sender.clone(),
+        recipient: env.contract.address,
+        amount,
+    };
+    let msg = WasmMsg::Execute {
+        contract_addr: cw20_token_address,
+        msg: to_binary(&transfer_from_msg)?,
+        send: vec![],
+    };
+
     let res = HandleResponse {
-        messages: vec![],
+        messages: vec![msg.into()],
         log: vec![
-            log("action", "increase_balance"),
-            log("holder_address", address),
+            log("action", "bond_stake"),
+            log("holder_address", sender),
             log("amount", amount),
         ],
         data: None,
@@ -117,18 +134,19 @@ pub fn handle_increase_balance<S: Storage, A: Api, Q: Querier>(
     Ok(res)
 }
 
-pub fn handle_decrease_balance<S: Storage, A: Api, Q: Querier>(
+pub fn handle_unbound<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-    address: HumanAddr,
     amount: Uint128,
-) -> StdResult<HandleResponse<TerraMsgWrapper>> {
+) -> StdResult<HandleResponse> {
     let config = read_config(&deps.storage)?;
-    let address_raw = deps.api.canonical_address(&address)?;
+    let address_raw = deps.api.canonical_address(&env.message.sender)?;
 
-    // Check sender is token contract
-    if env.message.sender != deps.api.human_address(&config.cw20_token_contract)? {
-        return Err(StdError::unauthorized());
+    if !env.message.sent_funds.is_empty() {
+        return Err(StdError::generic_err("Do not send funds with stake"));
+    }
+    if amount.is_zero() {
+        return Err(StdError::generic_err("Amount required"));
     }
 
     let mut state: State = read_state(&deps.storage)?;
@@ -149,17 +167,60 @@ pub fn handle_decrease_balance<S: Storage, A: Api, Q: Querier>(
 
     store_holder(&mut deps.storage, &address_raw, &holder)?;
     store_state(&mut deps.storage, &state)?;
+
+    // create claim
+    let release_height = Expiration::AtHeight(env.block.height + config.unbonding_period);
+    create_claim(&mut deps.storage, address_raw, amount, release_height)?;
+
     let res = HandleResponse {
         messages: vec![],
         log: vec![
-            log("action", "decrease_balance"),
-            log("holder_address", address),
+            log("action", "unbond_stake"),
+            log("holder_address", env.message.sender),
             log("amount", amount),
         ],
         data: None,
     };
 
     Ok(res)
+}
+
+pub fn handle_withdraw_stake<S: Storage, A: Api, Q: Querier>(
+    deps: &mut Extern<S, A, Q>,
+    env: Env,
+    cap: Option<Uint128>,
+) -> StdResult<HandleResponse> {
+    let config = read_config(&deps.storage)?;
+    let addr = deps.api.canonical_address(&env.message.sender)?;
+
+    let amount = claim_tokens(&mut deps.storage, addr, &env.block, cap)?;
+    if amount.is_zero() {
+        return Err(StdError::GenericErr {
+            msg: "Wait for the unbonding period".into(),
+            backtrace: None,
+        });
+    }
+
+    let cw20_human_addr = deps.api.human_address(&config.cw20_token_addr)?;
+    let cw20_transfer_msg = Cw20HandleMsg::Transfer {
+        recipient: env.message.sender.clone(),
+        amount,
+    };
+    let msg = WasmMsg::Execute {
+        contract_addr: cw20_human_addr,
+        msg: to_binary(&cw20_transfer_msg)?,
+        send: vec![],
+    };
+
+    Ok(HandleResponse {
+        messages: vec![msg.into()],
+        log: vec![
+            log("action", "withdraw_stake"),
+            log("holder_address", &env.message.sender),
+            log("amount", amount),
+        ],
+        data: None,
+    })
 }
 
 pub fn query_accrued_rewards<S: Storage, A: Api, Q: Querier>(
