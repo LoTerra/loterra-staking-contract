@@ -510,12 +510,8 @@ fn withdraw_stake() {
         Err(StdError::GenericErr {
             msg,
             backtrace: None,
-        }) => {
-            assert_eq!(msg, "Wait for the unbonding period");
-        }
-        _ => {
-            panic!("Unexpected error")
-        }
+        }) => assert_eq!(msg, "Wait for the unbonding period"),
+        _ => panic!("Unexpected error"),
     }
 
     // withdraw works after unbonding period
@@ -618,12 +614,9 @@ fn withdraw_stake_cap() {
         Err(StdError::GenericErr {
             msg,
             backtrace: None,
-        }) => {
-            assert_eq!(msg, "Wait for the unbonding period");
-        }
-        _ => {
-            panic!("Unexpected error")
-        }
+        }) => assert_eq!(msg, "Wait for the unbonding period"),
+
+        _ => panic!("Unexpected error"),
     }
 
     let msg = HandleMsg::WithdrawStake {
