@@ -73,7 +73,7 @@ fn query_config<S: Storage, A: Api, Q: Querier>(
     Ok(ConfigResponse {
         cw20_token_addr: deps.api.human_address(&config.cw20_token_addr)?,
         reward_denom: config.reward_denom,
-        unbonding_period: 0,
+        unbonding_period: config.unbonding_period,
     })
 }
 
