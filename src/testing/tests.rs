@@ -76,7 +76,7 @@ mod tests {
             ConfigResponse {
                 cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
                 reward_denom: DEFAULT_REWARD_DENOM.to_string(),
-                unbonding_period: 0
+                unbonding_period: 1000
             }
         );
 
