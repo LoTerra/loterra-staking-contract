@@ -1,11 +1,11 @@
-use cosmwasm_std::{Api, Coin, Decimal, Extern, Querier, StdResult, Storage, Uint128};
+use cosmwasm_std::{Api, Coin, Decimal, Extern, Querier, StdResult, Storage, Uint128, DepsMut};
 
 use terra_cosmwasm::TerraQuerier;
 
 static DECIMAL_FRACTION: Uint128 = Uint128(1_000_000_000_000_000_000u128);
 
-pub fn compute_tax<S: Storage, A: Api, Q: Querier>(
-    deps: &Extern<S, A, Q>,
+pub fn compute_tax(
+    deps: DepsMut,
     coin: &Coin,
 ) -> StdResult<Uint128> {
     let terra_querier = TerraQuerier::new(&deps.querier);
@@ -21,8 +21,8 @@ pub fn compute_tax<S: Storage, A: Api, Q: Querier>(
     ))
 }
 
-pub fn deduct_tax<S: Storage, A: Api, Q: Querier>(
-    deps: &Extern<S, A, Q>,
+pub fn deduct_tax(
+    deps: DepsMut,
     coin: Coin,
 ) -> StdResult<Coin> {
     let tax_amount = compute_tax(deps, &coin)?;

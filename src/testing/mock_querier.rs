@@ -1,8 +1,5 @@
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{
-    from_slice, to_binary, Coin, Decimal, Extern, HumanAddr, Querier, QuerierResult, QueryRequest,
-    SystemError, Uint128,
-};
+use cosmwasm_std::{from_slice, to_binary, Coin, Decimal, Extern, Querier, QuerierResult, QueryRequest, SystemError, Uint128, Addr, Api};
 use std::str::FromStr;
 use terra_cosmwasm::{
     ExchangeRateItem, ExchangeRatesResponse, TaxCapResponse, TaxRateResponse, TerraQuery,
@@ -18,7 +15,7 @@ pub fn mock_dependencies(
     canonical_length: usize,
     contract_balance: &[Coin],
 ) -> Extern<MockStorage, MockApi, WasmMockQuerier> {
-    let contract_addr = HumanAddr::from(MOCK_CONTRACT_ADDR);
+    let contract_addr = Addr::unchecked(MOCK_CONTRACT_ADDR);
     let custom_querier: WasmMockQuerier = WasmMockQuerier::new(
         MockQuerier::new(&[(&contract_addr, contract_balance)]),
         canonical_length,

@@ -20,10 +20,7 @@
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_env, MOCK_CONTRACT_ADDR};
-    use cosmwasm_std::{
-        from_binary, to_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, HumanAddr, StdError,
-        Uint128, WasmMsg,
-    };
+    use cosmwasm_std::{from_binary, to_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, HumanAddr, StdError, Uint128, WasmMsg, Addr};
 
     use crate::contract::{handle, init, query};
     use crate::math::{decimal_multiplication_in_256, decimal_subtraction_in_256};
@@ -42,8 +39,9 @@ mod tests {
     const DEFAULT_REWARD_DENOM: &str = "uusd";
 
     fn default_init() -> InitMsg {
+
         InitMsg {
-            cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
+            cw20_token_addr: Addr::unchecked(MOCK_CW20_CONTRACT_ADDR),
             reward_denom: DEFAULT_REWARD_DENOM.to_string(),
             unbonding_period: 1000,
         }
@@ -52,7 +50,7 @@ mod tests {
     fn receive_stake_msg(sender: &str, amount: u128) -> HandleMsg {
         let bond_msg = ReceiveMsg::BondStake {};
         let cw20_receive_msg = Cw20ReceiveMsg {
-            sender: HumanAddr::from(sender),
+            sender: Addr::unchecked(sender).to_string(),
             amount: Uint128(amount),
             msg: Some(to_binary(&bond_msg).unwrap()),
         };

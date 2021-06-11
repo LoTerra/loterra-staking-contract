@@ -3,11 +3,7 @@ use cosmwasm_std::{Api, CanonicalAddr, Decimal, Extern, Order, Querier, Readonly
 use cosmwasm_storage::{bucket, bucket_read, singleton, singleton_read, ReadonlyBucket};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use cw_storage_plus::{Item, Map};
-
-
-
-pub static PREFIX_HOLDERS: &[u8] = b"holders";
+use cw_storage_plus::{Item, Map, Bound};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
@@ -64,17 +60,17 @@ pub fn read_holders(
     limit: Option<u32>,
 ) -> StdResult<Vec<HolderResponse>> {
     let holder_bucket = PREFIXED_HOLDERS;
-    let holder_bucket: ReadonlyBucket<S, Holder> = bucket_read(PREFIX_HOLDERS, &deps.storage);
+    //let holder_bucket: ReadonlyBucket<S, Holder> = bucket_read(PREFIX_HOLDERS, &deps.storage);
 
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
-    let start = calc_range_start(start_after);
+    let start = calc_range_start(start_after)?;
 
     holder_bucket
-        .range(start.as_deref(), None, Order::Ascending)
+        .range(deps.storage, Option::from(Bound::Exclusive(start)), Bound::None, Order::Ascending)
         .take(limit)
         .map(|elem| {
             let (k, v) = elem?;
-            let address: HumanAddr = deps.api.human_address(&CanonicalAddr::from(k))?;
+            let address = deps.api.addr_humanize(&CanonicalAddr::from(k))?;
             Ok(HolderResponse {
                 address,
                 balance: v.balance,

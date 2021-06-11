@@ -1,12 +1,12 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Decimal, HumanAddr, Uint128};
+use cosmwasm_std::{Decimal, Uint128, Addr};
 use cw20::Cw20ReceiveMsg;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitMsg {
-    pub cw20_token_addr: HumanAddr,
+    pub cw20_token_addr: Addr,
     pub reward_denom: String,
     pub unbonding_period: u64,
 }
@@ -39,7 +39,7 @@ pub enum HandleMsg {
     ///////////////////
 
     /// return the accrued reward in usdt to the user.
-    ClaimRewards { recipient: Option<HumanAddr> },
+    ClaimRewards { recipient: Option<Addr> },
 
     /// This accepts a properly-encoded ReceiveMsg from a cw20 contract
     Receive(Cw20ReceiveMsg),
@@ -60,23 +60,23 @@ pub enum QueryMsg {
     Config {},
     State {},
     AccruedRewards {
-        address: HumanAddr,
+        address: Addr,
     },
     Holder {
-        address: HumanAddr,
+        address: Addr,
     },
     Holders {
-        start_after: Option<HumanAddr>,
+        start_after: Option<Addr>,
         limit: Option<u32>,
     },
     Claims {
-        address: HumanAddr,
+        address: Addr,
     },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigResponse {
-    pub cw20_token_addr: HumanAddr,
+    pub cw20_token_addr: Addr,
     pub reward_denom: String,
     pub unbonding_period: u64,
 }
@@ -95,7 +95,7 @@ pub struct AccruedRewardsResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct HolderResponse {
-    pub address: HumanAddr,
+    pub address: Addr,
     pub balance: Uint128,
     pub index: Decimal,
     pub pending_rewards: Decimal,
