@@ -1,14 +1,11 @@
 use crate::msg::HolderResponse;
-use cosmwasm_std::{
-    Api, CanonicalAddr, Decimal, Extern, HumanAddr, Order, Querier, ReadonlyStorage, StdResult,
-    Storage, Uint128,
-};
+use cosmwasm_std::{Api, CanonicalAddr, Decimal, Extern, Order, Querier, ReadonlyStorage, StdResult, Storage, Uint128, Addr, DepsMut};
 use cosmwasm_storage::{bucket, bucket_read, singleton, singleton_read, ReadonlyBucket};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use cw_storage_plus::{Item, Map};
 
-pub static KEY_CONFIG: &[u8] = b"config";
-pub static KEY_STATE: &[u8] = b"state";
+
 
 pub static PREFIX_HOLDERS: &[u8] = b"holders";
 
@@ -18,14 +15,7 @@ pub struct Config {
     pub reward_denom: String,
     pub unbonding_period: u64,
 }
-
-pub fn store_config<S: Storage>(storage: &mut S, config: &Config) -> StdResult<()> {
-    singleton(storage, KEY_CONFIG).save(config)
-}
-
-pub fn read_config<S: ReadonlyStorage>(storage: &S) -> StdResult<Config> {
-    singleton_read(storage, KEY_CONFIG).load()
-}
+pub const CONFIG: Item<Config> = Item::new("config");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
@@ -33,14 +23,7 @@ pub struct State {
     pub total_balance: Uint128,
     pub prev_reward_balance: Uint128,
 }
-
-pub fn store_state<S: Storage>(storage: &mut S, state: &State) -> StdResult<()> {
-    singleton(storage, KEY_STATE).save(state)
-}
-
-pub fn read_state<S: ReadonlyStorage>(storage: &S) -> StdResult<State> {
-    singleton_read(storage, KEY_STATE).load()
-}
+pub const STATE: Item<State> = Item::new("state");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Holder {
@@ -49,18 +32,19 @@ pub struct Holder {
     pub pending_rewards: Decimal,
 }
 
+pub const PREFIXED_HOLDERS: Map<&[u8], Holder> = Map::new("holders");
 // This is similar to HashMap<holder's address, Hodler>
 pub fn store_holder<S: Storage>(
     storage: &mut S,
     holder_address: &CanonicalAddr,
     holder: &Holder,
 ) -> StdResult<()> {
-    bucket(PREFIX_HOLDERS, storage).save(holder_address.as_slice(), holder)
+    PREFIXED_HOLDERS.save(storage, holder_address.as_slice(), holder);
 }
 
 pub fn read_holder<S: Storage>(storage: &S, holder_address: &CanonicalAddr) -> StdResult<Holder> {
-    let res: Option<Holder> =
-        bucket_read(PREFIX_HOLDERS, storage).may_load(holder_address.as_slice())?;
+    let res: Option<Holder> = PREFIXED_HOLDERS.may_load(storage, holder_address.as_slice())?;
+
     match res {
         Some(holder) => Ok(holder),
         None => Ok(Holder {
@@ -74,11 +58,12 @@ pub fn read_holder<S: Storage>(storage: &S, holder_address: &CanonicalAddr) -> S
 // settings for pagination
 const MAX_LIMIT: u32 = 30;
 const DEFAULT_LIMIT: u32 = 10;
-pub fn read_holders<S: Storage, A: Api, Q: Querier>(
-    deps: &Extern<S, A, Q>,
+pub fn read_holders(
+    deps: DepsMut,
     start_after: Option<CanonicalAddr>,
     limit: Option<u32>,
 ) -> StdResult<Vec<HolderResponse>> {
+    let holder_bucket = PREFIXED_HOLDERS;
     let holder_bucket: ReadonlyBucket<S, Holder> = bucket_read(PREFIX_HOLDERS, &deps.storage);
 
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
