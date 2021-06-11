@@ -1,6 +1,6 @@
 use crate::state::{read_holder, read_holders, store_holder, Config, Holder, State, STATE, CONFIG};
 
-use cosmwasm_std::{from_binary, to_binary, BankMsg, Coin, Decimal, Env, StdError, StdResult, Uint128, WasmMsg, Addr, Response, DepsMut, MessageInfo, attr, Deps};
+use cosmwasm_std::{from_binary, to_binary, BankMsg, Coin, Decimal, Env, StdError, StdResult, Uint128, WasmMsg, Addr, Response, DepsMut, MessageInfo, attr, Deps, Binary};
 
 use crate::claim::{claim_tokens, create_claim};
 use crate::math::{
@@ -81,12 +81,8 @@ pub fn handle_receive(
         return Err(StdError::generic_err("only loterra contract can send receive messages"));
     }
 
-    let msg: ReceiveMsg = match wrapper.msg {
-        Some(bin) => from_binary(&bin),
-        None => Err(StdError::parse_err("ReceiveMsg", "no data")),
-    }?;
-
     let holder_addr = deps.api.addr_validate(&wrapper.sender)?;
+    let msg:ReceiveMsg = from_binary(&wrapper.msg)?;
     match msg {
         ReceiveMsg::BondStake {} => handle_bond(deps, env, info, holder_addr, wrapper.amount),
     }
@@ -166,12 +162,12 @@ pub fn handle_unbound(
     holder.balance = holder.balance.checked_sub(amount)?;
     state.total_balance = state.total_balance.checked_sub(amount)?;
 
-    store_holder(&deps, &address_raw, &holder)?;
+    store_holder(*deps, &address_raw, &holder)?;
     STATE.save(deps.storage, &state)?;
 
     // create claim
     let release_height = Expiration::AtHeight(env.block.height + config.unbonding_period);
-    create_claim(&deps, address_raw, amount, release_height)?;
+    create_claim(deps, address_raw, amount, release_height)?;
 
     let res = Response {
         submessages: vec![],

@@ -30,7 +30,7 @@ pub struct Holder {
 pub const PREFIXED_HOLDERS: Map<&[u8], Holder> = Map::new("holders");
 // This is similar to HashMap<holder's address, Hodler>
 pub fn store_holder(
-    deps: &DepsMut,
+    deps: DepsMut,
     holder_address: &CanonicalAddr,
     holder: &Holder,
 ) -> StdResult<()> {

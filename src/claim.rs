@@ -22,7 +22,7 @@ pub const CLAIM: Map<&[u8], Vec<Claim>> = Map::new("claims");
 /// This creates a claim, such that the given address can claim an amount of tokens after
 /// the release date.
 pub fn create_claim(
-    deps: &DepsMut,
+    deps: DepsMut,
     addr: CanonicalAddr,
     amount: Uint128,
     release_at: Expiration,
