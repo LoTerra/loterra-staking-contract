@@ -1,6 +1,6 @@
-use crate::state::{read_config, read_holder, read_holders, read_state, store_holder, store_state, Config, Holder, State, STATE, CONFIG};
+use crate::state::{read_holder, read_holders, store_holder, Config, Holder, State, STATE, CONFIG};
 
-use cosmwasm_std::{from_binary, log, to_binary, Api, BankMsg, Coin, Decimal, Env, Extern, Querier, StdError, StdResult, Storage, Uint128, WasmMsg, Addr, Response, DepsMut, MessageInfo, attr, Deps};
+use cosmwasm_std::{from_binary, to_binary, BankMsg, Coin, Decimal, Env, StdError, StdResult, Uint128, WasmMsg, Addr, Response, DepsMut, MessageInfo, attr, Deps};
 
 use crate::claim::{claim_tokens, create_claim};
 use crate::math::{
@@ -25,7 +25,7 @@ pub fn handle_claim_rewards(
         None => info.sender,
     };
 
-    let mut holder: Holder = read_holder(&deps.storage, &holder_addr_raw)?;
+    let mut holder: Holder = read_holder(&deps.as_ref(), &holder_addr_raw)?;
     let mut state: State = STATE.load(deps.storage)?;
     let config: Config = CONFIG.load(deps.storage)?;
 
@@ -41,14 +41,14 @@ pub fn handle_claim_rewards(
     if rewards.is_zero() {
         return Err(StdError::generic_err("No rewards have accrued yet"));
     }
-
-    let new_balance = (state.prev_reward_balance - rewards)?;
+    //let f = state.prev_reward_balance.wrapping_sub(rewards);
+    let new_balance = Uint128(state.prev_reward_balance.u128() - rewards.u128());
     state.prev_reward_balance = new_balance;
     STATE.save(deps.storage, &state)?;
 
     holder.pending_rewards = decimals;
     holder.index = state.global_index;
-    store_holder(deps.storage, &holder_addr_raw, &holder)?;
+    store_holder(&deps, &holder_addr_raw, &holder)?;
 
     Ok(Response {
         submessages: vec![],
@@ -85,7 +85,7 @@ pub fn handle_receive(
         Some(bin) => from_binary(&bin),
         None => Err(StdError::parse_err("ReceiveMsg", "no data")),
     }?;
-    ;
+
     let holder_addr = deps.api.addr_validate(&wrapper.sender)?;
     match msg {
         ReceiveMsg::BondStake {} => handle_bond(deps, env, info, holder_addr, wrapper.amount),
@@ -110,7 +110,7 @@ pub fn handle_bond(
     let address_raw = deps.api.addr_canonicalize(&holder_addr.as_str())?;
 
     let mut state: State = STATE.load(deps.storage)?;
-    let mut holder: Holder = read_holder(&deps.storage, &address_raw)?;
+    let mut holder: Holder = read_holder(&deps.as_ref(), &address_raw)?;
 
     // get decimals
     let rewards = calculate_decimal_rewards(state.global_index, holder.index, holder.balance)?;
@@ -120,7 +120,7 @@ pub fn handle_bond(
     holder.balance += amount;
     state.total_balance += amount;
 
-    store_holder(deps.storage, &address_raw, &holder)?;
+    store_holder(&deps, &address_raw, &holder)?;
     STATE.save(deps.storage, &state)?;
 
     let res = Response {
@@ -143,7 +143,7 @@ pub fn handle_unbound(
 
     let address_raw = deps.api.addr_canonicalize(&info.sender.as_str())?;
 
-    if !env.message.sent_funds.is_empty() {
+    if !info.funds.is_empty() {
         return Err(StdError::generic_err("Do not send funds with stake"));
     }
     if amount.is_zero() {
@@ -151,7 +151,7 @@ pub fn handle_unbound(
     }
 
     let mut state: State = STATE.load(deps.storage)?;
-    let mut holder: Holder = read_holder(&deps.storage, &address_raw)?;
+    let mut holder: Holder = read_holder(&deps.as_ref(), &address_raw)?;
     if holder.balance < amount {
         return Err(StdError::generic_err(format!(
             "Decrease amount cannot exceed user balance: {}",
@@ -163,15 +163,15 @@ pub fn handle_unbound(
 
     holder.index = state.global_index;
     holder.pending_rewards = decimal_summation_in_256(rewards, holder.pending_rewards);
-    holder.balance = (holder.balance - amount).unwrap();
-    state.total_balance = (state.total_balance - amount).unwrap();
+    holder.balance = holder.balance.checked_sub(amount)?;
+    state.total_balance = state.total_balance.checked_sub(amount)?;
 
-    store_holder(deps.storage, &address_raw, &holder)?;
+    store_holder(&deps, &address_raw, &holder)?;
     STATE.save(deps.storage, &state)?;
 
     // create claim
     let release_height = Expiration::AtHeight(env.block.height + config.unbonding_period);
-    create_claim(deps.storage, address_raw, amount, release_height)?;
+    create_claim(&deps, address_raw, amount, release_height)?;
 
     let res = Response {
         submessages: vec![],
@@ -192,19 +192,19 @@ pub fn handle_withdraw_stake(
     let config = CONFIG.load(deps.storage)?;
     let address_raw = deps.api.addr_canonicalize(&info.sender.as_str())?;
 
-    let amount = claim_tokens(deps.storage, address_raw, &env.block, cap)?;
+    let amount = claim_tokens(deps, address_raw, &env.block, cap)?;
     if amount.is_zero() {
         return Err(StdError::generic_err( "Wait for the unbonding period"));
     }
 
-    let cw20_human_addr = deps.api.human_address(&config.cw20_token_addr)?;
+    let cw20_human_addr = deps.api.addr_humanize(&config.cw20_token_addr)?;
 
     let cw20_transfer_msg = Cw20ExecuteMsg::Transfer {
         recipient: info.sender.to_string().clone(),
         amount,
     };
     let msg = WasmMsg::Execute {
-        contract_addr: cw20_human_addr,
+        contract_addr: cw20_human_addr.to_string(),
         msg: to_binary(&cw20_transfer_msg)?,
         send: vec![],
     };
@@ -218,12 +218,12 @@ pub fn handle_withdraw_stake(
 }
 
 pub fn query_accrued_rewards(
-    deps: DepsMut,
+    deps: Deps,
     address: Addr,
 ) -> StdResult<AccruedRewardsResponse> {
     let global_index = STATE.load(deps.storage)?.global_index;
 
-    let holder: Holder = read_holder(&deps.storage, &deps.api.addr_canonicalize(&address.as_str())?)?;
+    let holder: Holder = read_holder(&deps, &deps.api.addr_canonicalize(&address.as_str())?)?;
     let reward_with_decimals =
         calculate_decimal_rewards(global_index, holder.index, holder.balance)?;
     let all_reward_with_decimals =
@@ -235,10 +235,10 @@ pub fn query_accrued_rewards(
 }
 
 pub fn query_holder(
-    deps: DepsMut,
+    deps: Deps,
     address: Addr,
 ) -> StdResult<HolderResponse> {
-    let holder: Holder = read_holder(&deps.storage, &deps.api.addr_canonicalize(&address.as_str())?)?;
+    let holder: Holder = read_holder(&deps, &deps.api.addr_canonicalize(&address.as_str())?)?;
     Ok(HolderResponse {
         address,
         balance: holder.balance,
@@ -248,7 +248,7 @@ pub fn query_holder(
 }
 
 pub fn query_holders(
-    deps: DepsMut,
+    deps: Deps,
     start_after: Option<Addr>,
     limit: Option<u32>,
 ) -> StdResult<HoldersResponse> {

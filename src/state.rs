@@ -1,6 +1,5 @@
 use crate::msg::HolderResponse;
-use cosmwasm_std::{Api, CanonicalAddr, Decimal, Extern, Order, Querier, ReadonlyStorage, StdResult, Storage, Uint128, Addr, DepsMut};
-use cosmwasm_storage::{bucket, bucket_read, singleton, singleton_read, ReadonlyBucket};
+use cosmwasm_std::{CanonicalAddr, Decimal, Order, StdResult, Uint128, DepsMut, Deps};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use cw_storage_plus::{Item, Map, Bound};
@@ -30,16 +29,16 @@ pub struct Holder {
 
 pub const PREFIXED_HOLDERS: Map<&[u8], Holder> = Map::new("holders");
 // This is similar to HashMap<holder's address, Hodler>
-pub fn store_holder<S: Storage>(
-    storage: &mut S,
+pub fn store_holder(
+    deps: &DepsMut,
     holder_address: &CanonicalAddr,
     holder: &Holder,
 ) -> StdResult<()> {
-    PREFIXED_HOLDERS.save(storage, holder_address.as_slice(), holder);
+    PREFIXED_HOLDERS.save(deps.storage, holder_address.as_slice(), holder)
 }
 
-pub fn read_holder<S: Storage>(storage: &S, holder_address: &CanonicalAddr) -> StdResult<Holder> {
-    let res: Option<Holder> = PREFIXED_HOLDERS.may_load(storage, holder_address.as_slice())?;
+pub fn read_holder(deps: &Deps, holder_address: &CanonicalAddr) -> StdResult<Holder> {
+    let res: Option<Holder> = PREFIXED_HOLDERS.may_load(deps.storage, holder_address.as_slice())?;
 
     match res {
         Some(holder) => Ok(holder),
@@ -55,7 +54,7 @@ pub fn read_holder<S: Storage>(storage: &S, holder_address: &CanonicalAddr) -> S
 const MAX_LIMIT: u32 = 30;
 const DEFAULT_LIMIT: u32 = 10;
 pub fn read_holders(
-    deps: DepsMut,
+    deps: Deps,
     start_after: Option<CanonicalAddr>,
     limit: Option<u32>,
 ) -> StdResult<Vec<HolderResponse>> {
@@ -63,10 +62,10 @@ pub fn read_holders(
     //let holder_bucket: ReadonlyBucket<S, Holder> = bucket_read(PREFIX_HOLDERS, &deps.storage);
 
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
-    let start = calc_range_start(start_after)?;
+    let start = calc_range_start(start_after).unwrap();
 
     holder_bucket
-        .range(deps.storage, Option::from(Bound::Exclusive(start)), Bound::None, Order::Ascending)
+        .range(deps.storage, Some(Bound::Exclusive(start)), None, Order::Ascending)
         .take(limit)
         .map(|elem| {
             let (k, v) = elem?;

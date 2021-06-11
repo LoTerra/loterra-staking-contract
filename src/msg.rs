@@ -5,7 +5,7 @@ use cosmwasm_std::{Decimal, Uint128, Addr};
 use cw20::Cw20ReceiveMsg;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct InitMsg {
+pub struct InstantiateMsg {
     pub cw20_token_addr: Addr,
     pub reward_denom: String,
     pub unbonding_period: u64,
@@ -13,7 +13,7 @@ pub struct InitMsg {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum HandleMsg {
+pub enum ExecuteMsg {
     ////////////////////
     /// Owner's operations
     ///////////////////
