@@ -167,7 +167,7 @@ pub fn handle_unbound(
 
     // create claim
     let release_height = Expiration::AtHeight(env.block.height + config.unbonding_period);
-    create_claim(deps, address_raw, amount, release_height)?;
+    create_claim(deps.storage, address_raw, amount, release_height)?;
 
     let res = Response {
         submessages: vec![],

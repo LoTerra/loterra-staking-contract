@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{BlockInfo, CanonicalAddr, StdResult, Uint128, DepsMut, Addr, Deps, Storage};
+use cosmwasm_std::{BlockInfo, CanonicalAddr, StdResult, Uint128, Addr, Deps, Storage};
 // use cw_storage_plus::Map;
 use cw20::Expiration;
 use cw_storage_plus::Map;
@@ -22,13 +22,13 @@ pub const CLAIM: Map<&[u8], Vec<Claim>> = Map::new("claims");
 /// This creates a claim, such that the given address can claim an amount of tokens after
 /// the release date.
 pub fn create_claim(
-    deps: DepsMut,
+    storage: &mut dyn Storage,
     addr: CanonicalAddr,
     amount: Uint128,
     release_at: Expiration,
 ) -> StdResult<()> {
     // add a claim to this user to get their tokens after the unbonding period
-    CLAIM.update(deps.storage, addr.as_slice(), |old| -> StdResult<_> {
+    CLAIM.update(storage, addr.as_slice(), |old| -> StdResult<_> {
         let mut claims = old.unwrap_or_default();
         claims.push(Claim { amount, release_at });
         Ok(claims)
