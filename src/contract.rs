@@ -59,7 +59,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
-pub fn query_config(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<ConfigResponse> {
+pub fn query_config(deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<ConfigResponse> {
     let config = CONFIG.load(deps.storage)?;
 
     Ok(ConfigResponse {
@@ -68,7 +68,7 @@ pub fn query_config(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<ConfigRes
         unbonding_period: config.unbonding_period,
     })
 }
-pub fn query_state(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<StateResponse> {
+pub fn query_state(deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<StateResponse> {
     let state = STATE.load(deps.storage)?;
     Ok(StateResponse {
         global_index: state.global_index,

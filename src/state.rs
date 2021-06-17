@@ -1,5 +1,5 @@
 use crate::msg::HolderResponse;
-use cosmwasm_std::{CanonicalAddr, Decimal, Order, StdResult, Uint128, DepsMut, Deps};
+use cosmwasm_std::{CanonicalAddr, Decimal, Order, StdResult, Uint128, Deps, Storage};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use cw_storage_plus::{Item, Map, Bound};
@@ -30,11 +30,11 @@ pub struct Holder {
 pub const PREFIXED_HOLDERS: Map<&[u8], Holder> = Map::new("holders");
 // This is similar to HashMap<holder's address, Hodler>
 pub fn store_holder(
-    deps: DepsMut,
+    storage: &mut dyn Storage,
     holder_address: &CanonicalAddr,
     holder: &Holder,
 ) -> StdResult<()> {
-    PREFIXED_HOLDERS.save(deps.storage, holder_address.as_slice(), holder)
+    PREFIXED_HOLDERS.save(storage, holder_address.as_slice(), holder)
 }
 
 pub fn read_holder(deps: &Deps, holder_address: &CanonicalAddr) -> StdResult<Holder> {

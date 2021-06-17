@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{BlockInfo, CanonicalAddr, StdResult, Uint128, DepsMut, Addr, Deps};
+use cosmwasm_std::{BlockInfo, CanonicalAddr, StdResult, Uint128, DepsMut, Addr, Deps, Storage};
 // use cw_storage_plus::Map;
 use cw20::Expiration;
 use cw_storage_plus::Map;
@@ -43,13 +43,13 @@ pub fn create_claim(
     to transfer cw-20 from the staking contract to claimer address
 */
 pub fn claim_tokens(
-    deps: DepsMut,
+    storage: &mut dyn Storage,
     addr: CanonicalAddr,
     block: &BlockInfo,
     cap: Option<Uint128>,
 ) -> StdResult<Uint128> {
     let mut to_send = Uint128(0);
-    CLAIM.update(deps.storage, addr.as_slice(), |claim| -> StdResult<_> {
+    CLAIM.update(storage, addr.as_slice(), |claim| -> StdResult<_> {
         let (_send, waiting): (Vec<_>, _) =
             claim.unwrap_or_default().iter().cloned().partition(|c| {
                 // if mature and we can pay fully, then include in _send

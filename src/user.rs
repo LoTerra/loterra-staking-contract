@@ -1,6 +1,6 @@
 use crate::state::{read_holder, read_holders, store_holder, Config, Holder, State, STATE, CONFIG};
 
-use cosmwasm_std::{from_binary, to_binary, BankMsg, Coin, Decimal, Env, StdError, StdResult, Uint128, WasmMsg, Addr, Response, DepsMut, MessageInfo, attr, Deps, Binary};
+use cosmwasm_std::{from_binary, to_binary, BankMsg, Coin, Decimal, Env, StdError, StdResult, Uint128, WasmMsg, Addr, Response, DepsMut, MessageInfo, attr, Deps};
 
 use crate::claim::{claim_tokens, create_claim};
 use crate::math::{
@@ -48,7 +48,7 @@ pub fn handle_claim_rewards(
 
     holder.pending_rewards = decimals;
     holder.index = state.global_index;
-    store_holder(&deps, &holder_addr_raw, &holder)?;
+    store_holder(deps.storage, &holder_addr_raw, &holder)?;
 
     Ok(Response {
         submessages: vec![],
@@ -90,7 +90,7 @@ pub fn handle_receive(
 
 pub fn handle_bond(
     deps: DepsMut,
-    env: Env,
+    _env: Env,
     info: MessageInfo,
     holder_addr: Addr,
     amount: Uint128,
@@ -116,7 +116,7 @@ pub fn handle_bond(
     holder.balance += amount;
     state.total_balance += amount;
 
-    store_holder(&deps, &address_raw, &holder)?;
+    store_holder(deps.storage, &address_raw, &holder)?;
     STATE.save(deps.storage, &state)?;
 
     let res = Response {
@@ -162,7 +162,7 @@ pub fn handle_unbound(
     holder.balance = holder.balance.checked_sub(amount)?;
     state.total_balance = state.total_balance.checked_sub(amount)?;
 
-    store_holder(*deps, &address_raw, &holder)?;
+    store_holder(deps.storage, &address_raw, &holder)?;
     STATE.save(deps.storage, &state)?;
 
     // create claim
@@ -188,7 +188,7 @@ pub fn handle_withdraw_stake(
     let config = CONFIG.load(deps.storage)?;
     let address_raw = deps.api.addr_canonicalize(&info.sender.as_str())?;
 
-    let amount = claim_tokens(deps, address_raw, &env.block, cap)?;
+    let amount = claim_tokens(deps.storage, address_raw, &env.block, cap)?;
     if amount.is_zero() {
         return Err(StdError::generic_err( "Wait for the unbonding period"));
     }
