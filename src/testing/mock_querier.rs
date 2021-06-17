@@ -1,5 +1,5 @@
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{from_slice, to_binary, Coin, Decimal, Extern, Querier, QuerierResult, QueryRequest, SystemError, Uint128, Addr, Api};
+use cosmwasm_std::{from_slice, to_binary, Coin, Decimal, Querier, QuerierResult, QueryRequest, SystemError, Uint128, Addr, Api};
 use std::str::FromStr;
 use terra_cosmwasm::{
     ExchangeRateItem, ExchangeRatesResponse, TaxCapResponse, TaxRateResponse, TerraQuery,
