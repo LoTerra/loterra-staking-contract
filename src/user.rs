@@ -1,6 +1,9 @@
-use crate::state::{read_holder, read_holders, store_holder, Config, Holder, State, STATE, CONFIG};
+use crate::state::{read_holder, read_holders, store_holder, Config, Holder, State, CONFIG, STATE};
 
-use cosmwasm_std::{from_binary, to_binary, BankMsg, Coin, Decimal, Env, StdError, StdResult, Uint128, WasmMsg, Addr, Response, DepsMut, MessageInfo, attr, Deps};
+use cosmwasm_std::{
+    attr, from_binary, to_binary, Addr, BankMsg, Coin, Decimal, Deps, DepsMut, Env, MessageInfo,
+    Response, StdError, StdResult, Uint128, WasmMsg,
+};
 
 use crate::claim::{claim_tokens, create_claim};
 use crate::math::{
@@ -17,7 +20,6 @@ pub fn handle_claim_rewards(
     info: MessageInfo,
     recipient: Option<Addr>,
 ) -> StdResult<Response> {
-
     let holder_addr = info.sender.clone();
     let holder_addr_raw = deps.api.addr_canonicalize(&holder_addr.as_str())?;
     let recipient = match recipient {
@@ -64,7 +66,11 @@ pub fn handle_claim_rewards(
         }
         .into()],
         data: None,
-        attributes: vec![attr("action", "claim_reward"), attr("holder_address", holder_addr), attr("rewards", rewards)]
+        attributes: vec![
+            attr("action", "claim_reward"),
+            attr("holder_address", holder_addr),
+            attr("rewards", rewards),
+        ],
     })
 }
 
@@ -78,11 +84,13 @@ pub fn handle_receive(
 
     // only loterra cw20 contract can send receieve msg
     if info.sender != deps.api.addr_humanize(&config.cw20_token_addr)? {
-        return Err(StdError::generic_err("only loterra contract can send receive messages"));
+        return Err(StdError::generic_err(
+            "only loterra contract can send receive messages",
+        ));
     }
 
     let holder_addr = deps.api.addr_validate(&wrapper.sender)?;
-    let msg:ReceiveMsg = from_binary(&wrapper.msg)?;
+    let msg: ReceiveMsg = from_binary(&wrapper.msg)?;
     match msg {
         ReceiveMsg::BondStake {} => handle_bond(deps, env, info, holder_addr, wrapper.amount),
     }
@@ -95,7 +103,6 @@ pub fn handle_bond(
     holder_addr: Addr,
     amount: Uint128,
 ) -> StdResult<Response> {
-
     if !info.funds.is_empty() {
         return Err(StdError::generic_err("Do not send funds with stake"));
     }
@@ -123,7 +130,11 @@ pub fn handle_bond(
         submessages: vec![],
         messages: vec![],
         data: None,
-        attributes: vec![attr("action", "bond_stake"), attr("holder_address", holder_addr), attr("amount", amount)]
+        attributes: vec![
+            attr("action", "bond_stake"),
+            attr("holder_address", holder_addr),
+            attr("amount", amount),
+        ],
     };
 
     Ok(res)
@@ -173,7 +184,11 @@ pub fn handle_unbound(
         submessages: vec![],
         messages: vec![],
         data: None,
-        attributes: vec![attr("action", "unbond_stake"), attr("holder_address", info.sender), attr("amount", amount)]
+        attributes: vec![
+            attr("action", "unbond_stake"),
+            attr("holder_address", info.sender),
+            attr("amount", amount),
+        ],
     };
 
     Ok(res)
@@ -190,7 +205,7 @@ pub fn handle_withdraw_stake(
 
     let amount = claim_tokens(deps.storage, address_raw, &env.block, cap)?;
     if amount.is_zero() {
-        return Err(StdError::generic_err( "Wait for the unbonding period"));
+        return Err(StdError::generic_err("Wait for the unbonding period"));
     }
 
     let cw20_human_addr = deps.api.addr_humanize(&config.cw20_token_addr)?;
@@ -209,14 +224,15 @@ pub fn handle_withdraw_stake(
         submessages: vec![],
         messages: vec![msg.into()],
         data: None,
-        attributes: vec![attr("action", "withdraw_stake"), attr("holder_address", &info.sender), attr("amount", amount)]
+        attributes: vec![
+            attr("action", "withdraw_stake"),
+            attr("holder_address", &info.sender),
+            attr("amount", amount),
+        ],
     })
 }
 
-pub fn query_accrued_rewards(
-    deps: Deps,
-    address: Addr,
-) -> StdResult<AccruedRewardsResponse> {
+pub fn query_accrued_rewards(deps: Deps, address: Addr) -> StdResult<AccruedRewardsResponse> {
     let global_index = STATE.load(deps.storage)?.global_index;
 
     let holder: Holder = read_holder(&deps, &deps.api.addr_canonicalize(&address.as_str())?)?;
@@ -230,10 +246,7 @@ pub fn query_accrued_rewards(
     Ok(AccruedRewardsResponse { rewards })
 }
 
-pub fn query_holder(
-    deps: Deps,
-    address: Addr,
-) -> StdResult<HolderResponse> {
+pub fn query_holder(deps: Deps, address: Addr) -> StdResult<HolderResponse> {
     let holder: Holder = read_holder(&deps, &deps.api.addr_canonicalize(&address.as_str())?)?;
     Ok(HolderResponse {
         address,

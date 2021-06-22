@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{BlockInfo, CanonicalAddr, StdResult, Uint128, Addr, Deps, Storage};
+use cosmwasm_std::{Addr, BlockInfo, CanonicalAddr, Deps, StdResult, Storage, Uint128};
 // use cw_storage_plus::Map;
 use cw20::Expiration;
 use cw_storage_plus::Map;
@@ -72,14 +72,11 @@ pub fn claim_tokens(
     Ok(to_send)
 }
 
-pub fn query_claims(
-    deps: Deps,
-    address: Addr,
-) -> StdResult<ClaimsResponse> {
+pub fn query_claims(deps: Deps, address: Addr) -> StdResult<ClaimsResponse> {
     let address_raw = deps.api.addr_canonicalize(address.as_str())?;
 
-    let claims =
-        CLAIM.may_load(deps.storage, address_raw.as_slice())?
+    let claims = CLAIM
+        .may_load(deps.storage, address_raw.as_slice())?
         .unwrap_or_default();
     Ok(ClaimsResponse { claims })
 }

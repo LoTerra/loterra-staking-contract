@@ -1,8 +1,8 @@
 use crate::msg::HolderResponse;
-use cosmwasm_std::{CanonicalAddr, Decimal, Order, StdResult, Uint128, Deps, Storage};
+use cosmwasm_std::{CanonicalAddr, Decimal, Deps, Order, StdResult, Storage, Uint128};
+use cw_storage_plus::{Bound, Item, Map};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use cw_storage_plus::{Item, Map, Bound};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
@@ -65,7 +65,12 @@ pub fn read_holders(
     let start = calc_range_start(start_after);
 
     holder_bucket
-        .range(deps.storage, Some(Bound::Exclusive(start.unwrap())), None, Order::Ascending)
+        .range(
+            deps.storage,
+            Some(Bound::Exclusive(start.unwrap())),
+            None,
+            Order::Ascending,
+        )
         .take(limit)
         .map(|elem| {
             let (k, v) = elem?;

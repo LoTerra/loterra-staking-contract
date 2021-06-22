@@ -4,10 +4,13 @@ use crate::user::{
     handle_claim_rewards, handle_receive, handle_unbound, handle_withdraw_stake,
     query_accrued_rewards, query_holder, query_holders,
 };
-use cosmwasm_std::{to_binary, Binary, Decimal, Env, StdResult, Uint128, DepsMut, MessageInfo, Response, entry_point, Deps};
+use cosmwasm_std::{
+    entry_point, to_binary, Binary, Decimal, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    Uint128,
+};
 
 use crate::claim::query_claims;
-use crate::msg::{ConfigResponse, ExecuteMsg, MigrateMsg, QueryMsg, StateResponse, InstantiateMsg};
+use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMsg, StateResponse};
 
 #[entry_point]
 pub fn instantiate(
@@ -16,7 +19,6 @@ pub fn instantiate(
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
-
     let conf = Config {
         cw20_token_addr: deps.api.addr_canonicalize(&msg.cw20_token_addr.as_str())?,
         reward_denom: msg.reward_denom,
@@ -24,18 +26,20 @@ pub fn instantiate(
     };
 
     CONFIG.save(deps.storage, &conf)?;
-    STATE.save(deps.storage, &State {
-        global_index: Decimal::zero(),
-        total_balance: Uint128::zero(),
-        prev_reward_balance: Uint128::zero(),
-    })?;
+    STATE.save(
+        deps.storage,
+        &State {
+            global_index: Decimal::zero(),
+            total_balance: Uint128::zero(),
+            prev_reward_balance: Uint128::zero(),
+        },
+    )?;
 
     Ok(Response::default())
 }
 
 #[entry_point]
 pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
-
     match msg {
         ExecuteMsg::ClaimRewards { recipient } => handle_claim_rewards(deps, env, info, recipient),
         ExecuteMsg::UpdateGlobalIndex {} => handle_update_global_index(deps, env),
@@ -48,8 +52,8 @@ pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> S
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Config {} => to_binary(&query_config(deps,  _env, msg)?),
-        QueryMsg::State {} => to_binary(&query_state(deps,_env, msg)?),
+        QueryMsg::Config {} => to_binary(&query_config(deps, _env, msg)?),
+        QueryMsg::State {} => to_binary(&query_state(deps, _env, msg)?),
         QueryMsg::AccruedRewards { address } => to_binary(&query_accrued_rewards(deps, address)?),
         QueryMsg::Holder { address } => to_binary(&query_holder(deps, address)?),
         QueryMsg::Holders { start_after, limit } => {
@@ -81,4 +85,3 @@ pub fn query_state(deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<StateResp
 pub fn migrate(_deps: DepsMut, _env: Env, _msg: MigrateMsg) -> StdResult<Response> {
     Ok(Response::default())
 }
-
