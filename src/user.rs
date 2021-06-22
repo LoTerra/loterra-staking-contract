@@ -20,7 +20,7 @@ pub fn handle_claim_rewards(
     info: MessageInfo,
     recipient: Option<String>,
 ) -> StdResult<Response> {
-    let holder_addr = info.sender.clone();
+    let holder_addr = info.sender;
     let holder_addr_raw = deps.api.addr_canonicalize(&holder_addr.as_str())?;
 
     let recipient = match recipient {
@@ -211,7 +211,7 @@ pub fn handle_withdraw_stake(
     let cw20_human_addr = deps.api.addr_humanize(&config.cw20_token_addr)?;
 
     let cw20_transfer_msg = Cw20ExecuteMsg::Transfer {
-        recipient: info.sender.to_string().clone(),
+        recipient: info.sender.to_string(),
         amount,
     };
     let msg = WasmMsg::Execute {
