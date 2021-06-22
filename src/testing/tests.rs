@@ -88,7 +88,7 @@ mod tests {
     fn receive_stake_msg(sender: &str, amount: u128) -> ExecuteMsg {
         let bond_msg = ReceiveMsg::BondStake {};
         let cw20_receive_msg = Cw20ReceiveMsg {
-            sender: Addr::unchecked(sender).to_string(),
+            sender: sender.to_string(),
             amount: Uint128(amount),
             msg: to_binary(&bond_msg).unwrap(),
         };
@@ -803,15 +803,15 @@ mod tests {
         instantiate(deps.as_mut(), env.clone(), info, init_msg);
 
         let info = mock_info(MOCK_CW20_CONTRACT_ADDR, &[]);
-        let receive_msg = receive_stake_msg("addr0000", 100);
+        let receive_msg = receive_stake_msg(Addr::unchecked("addr0000").as_str(), 100);
         execute(deps.as_mut(), env.clone(), info, receive_msg.clone()).unwrap();
 
         let info = mock_info(MOCK_CW20_CONTRACT_ADDR, &[]);
-        let receive_msg = receive_stake_msg("addr0001", 200);
+        let receive_msg = receive_stake_msg(Addr::unchecked("addr0001").as_str(), 200);
         execute(deps.as_mut(), env.clone(), info, receive_msg.clone()).unwrap();
 
         let info = mock_info(MOCK_CW20_CONTRACT_ADDR, &[]);
-        let receive_msg = receive_stake_msg("addr0002", 300);
+        let receive_msg = receive_stake_msg(Addr::unchecked("addr0002").as_str(), 300);
         execute(deps.as_mut(), env.clone(), info, receive_msg.clone()).unwrap();
 
         let res = query(
