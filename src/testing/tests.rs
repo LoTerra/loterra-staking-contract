@@ -41,7 +41,6 @@ mod tests {
     use terra_cosmwasm;
 
     use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
-    use cw_multi_test::{App, Contract, ContractWrapper, SimpleBank};
     use schemars::_serde_json::to_string;
     use std::ops::Add;
     use std::str::FromStr;
