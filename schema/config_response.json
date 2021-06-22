@@ -9,7 +9,7 @@
   ],
   "properties": {
     "cw20_token_addr": {
-      "$ref": "#/definitions/HumanAddr"
+      "type": "string"
     },
     "reward_denom": {
       "type": "string"
@@ -18,11 +18,6 @@
       "type": "integer",
       "format": "uint64",
       "minimum": 0.0
-    }
-  },
-  "definitions": {
-    "HumanAddr": {
-      "type": "string"
     }
   }
 }

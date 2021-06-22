@@ -1,18 +1,12 @@
-use crate::state::{read_config, read_state, store_state, State};
+use crate::state::{CONFIG, STATE};
 
 use crate::math::decimal_summation_in_256;
-use cosmwasm_std::{
-    log, Api, Decimal, Env, Extern, HandleResponse, Querier, StdError, StdResult, Storage,
-};
+use cosmwasm_std::{attr, Decimal, DepsMut, Env, Response, StdError, StdResult};
 
 /// Increase global_index according to claimed rewards amount
 /// Only hub_contract is allowed to execute
-pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
-    deps: &mut Extern<S, A, Q>,
-    env: Env,
-) -> StdResult<HandleResponse> {
-    let mut state: State = read_state(&deps.storage)?;
-
+pub fn handle_update_global_index(deps: DepsMut, env: Env) -> StdResult<Response> {
+    let mut state = STATE.load(deps.storage)?;
     // anybody can trigger update_global_index
     /*
     if config.lottery_contract != deps.api.canonical_address(&env.message.sender)? {
@@ -25,7 +19,7 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
         return Err(StdError::generic_err("No asset is bonded by Hub"));
     }
 
-    let reward_denom = read_config(&deps.storage)?.reward_denom;
+    let reward_denom = CONFIG.load(deps.storage)?.reward_denom;
 
     // Load the reward contract balance
     let balance = deps
@@ -36,7 +30,7 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
     let previous_balance = state.prev_reward_balance;
 
     // claimed_rewards = current_balance - prev_balance;
-    let claimed_rewards = (balance.amount - previous_balance)?;
+    let claimed_rewards = balance.amount.checked_sub(previous_balance)?;
 
     state.prev_reward_balance = balance.amount;
 
@@ -45,15 +39,17 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
         state.global_index,
         Decimal::from_ratio(claimed_rewards, state.total_balance),
     );
-    store_state(&mut deps.storage, &state)?;
 
-    let res = HandleResponse {
+    STATE.save(deps.storage, &state)?;
+
+    let res = Response {
+        submessages: vec![],
         messages: vec![],
-        log: vec![
-            log("action", "update_global_index"),
-            log("claimed_rewards", claimed_rewards),
-        ],
         data: None,
+        attributes: vec![
+            attr("action", "update_global_index"),
+            attr("claimed_rewards", claimed_rewards),
+        ],
     };
 
     Ok(res)
