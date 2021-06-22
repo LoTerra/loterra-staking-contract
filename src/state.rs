@@ -62,10 +62,10 @@ pub fn read_holders(
     //let holder_bucket: ReadonlyBucket<S, Holder> = bucket_read(PREFIX_HOLDERS, &deps.storage);
 
     let limit = limit.unwrap_or(DEFAULT_LIMIT).min(MAX_LIMIT) as usize;
-    let start = calc_range_start(start_after).unwrap();
+    let start = calc_range_start(start_after);
 
     holder_bucket
-        .range(deps.storage, Some(Bound::Exclusive(start)), None, Order::Ascending)
+        .range(deps.storage, Some(Bound::Exclusive(start.unwrap())), None, Order::Ascending)
         .take(limit)
         .map(|elem| {
             let (k, v) = elem?;

@@ -545,496 +545,447 @@ mod tests {
             })]
         );
     }
-    /*
-                          #[test]
-                          fn withdraw_stake_cap() {
-                              let mut deps = mock_dependencies(
-                                  20,
-                                  &[Coin {
-                                      denom: "uusd".to_string(),
-                                      amount: Uint128(100u128),
-                                  }],
-                              );
 
-                              let init_msg = default_init();
-                              let env = mock_env("addr0000", &[]);
+      #[test]
+      fn withdraw_stake_cap() {
 
-                              init(&mut deps, env, init_msg).unwrap();
+          let mut deps = mock_dependencies(
+              &[Coin {
+                  denom: DEFAULT_REWARD_DENOM.to_string(),
+                  amount: Uint128(100u128),
+              }],
+          );
 
-                              let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
-                              let receive_msg = receive_stake_msg("addr0000", 100);
-                              handle(&mut deps, env, receive_msg.clone()).unwrap();
+          let init_msg = default_init();
+          let mut env = mock_env();
+          let info = mock_info("addr0000", &[]);
+          instantiate(deps.as_mut(), env.clone(),info, init_msg);
 
-                              let res = query(
-                                  &deps,
-                                  QueryMsg::Holder {
-                                      address: HumanAddr::from("addr0000"),
-                                  },
-                              )
-                              .unwrap();
-                              let holder_response: HolderResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  holder_response,
-                                  HolderResponse {
-                                      address: HumanAddr::from("addr0000"),
-                                      balance: Uint128::from(100u128),
-                                      index: Decimal::zero(),
-                                      pending_rewards: Decimal::zero(),
-                                  }
-                              );
+          let info = mock_info(MOCK_CW20_CONTRACT_ADDR, &[]);
+          let receive_msg = receive_stake_msg("addr0000", 100);
+          execute(deps.as_mut(), env.clone(), info, receive_msg.clone()).unwrap();
 
-                              // claimed_rewards = 100, total_balance = 100
-                              // global_index == 1
-                              let env = mock_env("addr0000", &[]);
-                              let msg = HandleMsg::UpdateGlobalIndex {};
-                              handle(&mut deps, env, msg).unwrap();
+          let res = query(deps.as_ref(), env.clone(), QueryMsg::Holder {
+              address: Addr::unchecked("addr0000"),
+          }).unwrap();
 
-                              let msg = HandleMsg::ClaimRewards { recipient: None };
-                              let env = mock_env("addr0000", &[]);
-                              let res = handle(&mut deps, env, msg).unwrap();
-                              assert_eq!(
-                                  res.messages,
-                                  vec![CosmosMsg::Bank(BankMsg::Send {
-                                      from_address: HumanAddr::from(MOCK_CONTRACT_ADDR),
-                                      to_address: HumanAddr::from("addr0000"),
-                                      amount: vec![Coin {
-                                          denom: "uusd".to_string(),
-                                          amount: Uint128::from(99u128), // 1% tax
-                                      }]
-                                  })]
-                              );
+          let holder_response: HolderResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              holder_response,
+              HolderResponse {
+                  address: Addr::unchecked("addr0000"),
+                  balance: Uint128::from(100u128),
+                  index: Decimal::zero(),
+                  pending_rewards: Decimal::zero(),
+              }
+          );
 
-                              // withdraw stake
-                              let msg = HandleMsg::UnbondStake {
-                                  amount: Uint128::from(100u128),
-                              };
-                              let mut env = mock_env("addr0000", &[]);
-                              env.block.height = 5;
-                              handle(&mut deps, env, msg).unwrap();
+          // claimed_rewards = 100, total_balance = 100
+          // global_index == 1
+          let info = mock_info("addr0000", &[]);
+          let msg = ExecuteMsg::UpdateGlobalIndex {};
+          execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
-                              // cap is less then release, wait for more to unbond
-                              let msg = HandleMsg::WithdrawStake {
-                                  cap: Some(Uint128::from(50u128)),
-                              };
-                              let mut env = mock_env("addr0000", &[]);
-                              env.block.height = 100000;
-                              let res = handle(&mut deps, env, msg);
-                              match res {
-                                  Err(StdError::GenericErr {
-                                      msg,
-                                      backtrace: None,
-                                  }) => assert_eq!(msg, "Wait for the unbonding period"),
+          let msg = ExecuteMsg::ClaimRewards { recipient: None };
+          let info = mock_info("addr0000", &[]);
+          let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
+          assert_eq!(
+              res.messages,
+              vec![CosmosMsg::Bank(BankMsg::Send {
+                  to_address:"addr0000".to_string(),
+                  amount: vec![Coin {
+                      denom: "uusd".to_string(),
+                      amount: Uint128::from(99u128), // 1% tax
+                  }]
+              })]
+          );
 
-                                  _ => panic!("Unexpected error"),
-                              }
+          // withdraw stake
+          let msg = ExecuteMsg::UnbondStake {
+              amount: Uint128::from(100u128),
+          };
+          let info = mock_info("addr0000", &[]);
+          env.block.height = 5;
+          execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
-                              let msg = HandleMsg::WithdrawStake {
-                                  cap: Some(Uint128::from(150u128)),
-                              };
-                              let mut env = mock_env("addr0000", &[]);
-                              env.block.height = 100000;
-                              let res = handle(&mut deps, env, msg).unwrap();
+          // cap is less then release, wait for more to unbond
+          let msg = ExecuteMsg::WithdrawStake {
+              cap: Some(Uint128::from(50u128)),
+          };
+          let info = mock_info("addr0000", &[]);
+          env.block.height = 100000;
+          let res = execute(deps.as_mut(), env.clone(), info, msg);
+          match res {
+              Err(StdError::GenericErr {
+                  msg,
+                  ..
+              }) => assert_eq!(msg, "Wait for the unbonding period"),
 
-                              let cw20_transfer_msg = Cw20HandleMsg::Transfer {
-                                  recipient: HumanAddr::from("addr0000"),
-                                  amount: Uint128::from(100u128),
-                              };
-                              assert_eq!(
-                                  res.messages,
-                                  vec![CosmosMsg::Wasm(WasmMsg::Execute {
-                                      contract_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
-                                      msg: to_binary(&cw20_transfer_msg).unwrap(),
-                                      send: vec![]
-                                  })]
-                              );
-                          }
+              _ => panic!("Unexpected error"),
+          }
 
-                          #[test]
-                          fn claim_rewards_with_decimals() {
-                              let mut deps = mock_dependencies(
-                                  20,
-                                  &[Coin {
-                                      denom: "uusd".to_string(),
-                                      amount: Uint128(99999u128),
-                                  }],
-                              );
+          let msg = ExecuteMsg::WithdrawStake {
+              cap: Some(Uint128::from(150u128)),
+          };
+          let info = mock_info("addr0000", &[]);
+          env.block.height = 100000;
+          let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
-                              let init_msg = default_init();
-                              let env = mock_env("addr0000", &[]);
+          let cw20_transfer_msg = Cw20ExecuteMsg::Transfer {
+              recipient: "addr0000".to_string(),
+              amount: Uint128::from(100u128),
+          };
+          assert_eq!(
+              res.messages,
+              vec![CosmosMsg::Wasm(WasmMsg::Execute {
+                  contract_addr: MOCK_CW20_CONTRACT_ADDR.to_string(),
+                  msg: to_binary(&cw20_transfer_msg).unwrap(),
+                  send: vec![]
+              })]
+          );
+      }
 
-                              init(&mut deps, env, init_msg).unwrap();
+      #[test]
+      fn claim_rewards_with_decimals() {
+          let mut deps = mock_dependencies(
+              &[Coin {
+                  denom: DEFAULT_REWARD_DENOM.to_string(),
+                  amount: Uint128(100u128),
+              }],
+          );
 
-                              let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
-                              let receive_msg = receive_stake_msg("addr0000", 11);
-                              handle(&mut deps, env, receive_msg.clone()).unwrap();
+          let init_msg = default_init();
+          let mut env = mock_env();
+          let info = mock_info("addr0000", &[]);
+          instantiate(deps.as_mut(), env.clone(),info, init_msg);
 
-                              let res = query(
-                                  &deps,
-                                  QueryMsg::Holder {
-                                      address: HumanAddr::from("addr0000"),
-                                  },
-                              )
-                              .unwrap();
-                              let holder_response: HolderResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  holder_response,
-                                  HolderResponse {
-                                      address: HumanAddr::from("addr0000"),
-                                      balance: Uint128::from(11u128),
-                                      index: Decimal::zero(),
-                                      pending_rewards: Decimal::zero(),
-                                  }
-                              );
+          let info = mock_info("addr0000", &[]);
+          let receive_msg = receive_stake_msg("addr0000", 11);
+          execute(deps.as_mut(), env.clone(), info, receive_msg.clone()).unwrap();
 
-                              // claimed_rewards = 1000000, total_balance = 11
-                              // global_index ==
-                              let env = mock_env(MOCK_HUB_CONTRACT_ADDR, &[]);
+          let res = query(deps.as_ref(), env.clone(), QueryMsg::Holder {
+              address: Addr::unchecked("addr0000"),
+          }).unwrap();
 
-                              let msg = HandleMsg::UpdateGlobalIndex {};
-                              handle(&mut deps, env, msg).unwrap();
+          let holder_response: HolderResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              holder_response,
+              HolderResponse {
+                  address: Addr::unchecked("addr0000"),
+                  balance: Uint128::from(11u128),
+                  index: Decimal::zero(),
+                  pending_rewards: Decimal::zero(),
+              }
+          );
 
-                              let msg = HandleMsg::ClaimRewards { recipient: None };
-                              let env = mock_env("addr0000", &[]);
-                              let res = handle(&mut deps, env, msg).unwrap();
-                              assert_eq!(
-                                  res.messages,
-                                  vec![CosmosMsg::Bank(BankMsg::Send {
-                                      from_address: HumanAddr::from(MOCK_CONTRACT_ADDR),
-                                      to_address: HumanAddr::from("addr0000"),
-                                      amount: vec![Coin {
-                                          denom: "uusd".to_string(),
-                                          amount: Uint128::from(99007u128), // 1% tax
-                                      },]
-                                  })]
-                              );
+          // claimed_rewards = 1000000, total_balance = 11
+          // global_index ==
+          let info = mock_info(MOCK_HUB_CONTRACT_ADDR, &[]);
+          let msg = ExecuteMsg::UpdateGlobalIndex {};
+          execute(deps.as_mut(), env.clone(), info, msg.clone()).unwrap();
 
-                              let res = query(
-                                  &deps,
-                                  QueryMsg::Holder {
-                                      address: HumanAddr::from("addr0000"),
-                                  },
-                              )
-                              .unwrap();
-                              let holder_response: HolderResponse = from_binary(&res).unwrap();
-                              let index = decimal_multiplication_in_256(
-                                  Decimal::from_ratio(Uint128(99999), Uint128(11)),
-                                  Decimal::one(),
-                              );
-                              assert_eq!(
-                                  holder_response,
-                                  HolderResponse {
-                                      address: HumanAddr::from("addr0000"),
-                                      balance: Uint128::from(11u128),
-                                      index,
-                                      pending_rewards: Decimal::from_str("0.999999999999999991").unwrap(),
-                                  }
-                              );
+          let msg = ExecuteMsg::ClaimRewards { recipient: None };
+          let info = mock_info("addr0000", &[]);
+          let res = execute(deps.as_mut(), env.clone(), info, msg.clone()).unwrap();
+          assert_eq!(
+              res.messages,
+              vec![CosmosMsg::Bank(BankMsg::Send {
+                  to_address:"addr0000".to_string(),
+                  amount: vec![Coin {
+                      denom: "uusd".to_string(),
+                      amount: Uint128::from(99007u128), // 1% tax
+                  },]
+              })]
+          );
 
-                              let res = query(&deps, QueryMsg::State {}).unwrap();
-                              let state_response: StateResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  state_response,
-                                  StateResponse {
-                                      global_index: index,
-                                      total_balance: Uint128(11u128),
-                                      prev_reward_balance: Uint128(1)
-                                  }
-                              );
-                          }
+          let res = query(deps.as_ref(), env.clone(), QueryMsg::Holder {
+              address: Addr::unchecked("addr0000"),
+          }).unwrap();
+          let holder_response: HolderResponse = from_binary(&res).unwrap();
+          let index = decimal_multiplication_in_256(
+              Decimal::from_ratio(Uint128(99999), Uint128(11)),
+              Decimal::one(),
+          );
+          assert_eq!(
+              holder_response,
+              HolderResponse {
+                  address: Addr::unchecked("addr0000"),
+                  balance: Uint128::from(11u128),
+                  index,
+                  pending_rewards: Decimal::from_str("0.999999999999999991").unwrap(),
+              }
+          );
 
-                          #[test]
-                          fn query_holders() {
-                              let mut deps = mock_dependencies(
-                                  20,
-                                  &[Coin {
-                                      denom: "uusd".to_string(),
-                                      amount: Uint128(100u128),
-                                  }],
-                              );
+          let res = query(deps.as_ref(), env, QueryMsg::State {}).unwrap();
+          let state_response: StateResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              state_response,
+              StateResponse {
+                  global_index: index,
+                  total_balance: Uint128(11u128),
+                  prev_reward_balance: Uint128(1)
+              }
+          );
+      }
 
-                              let init_msg = default_init();
-                              let env = mock_env("addr0000", &[]);
+      #[test]
+      fn query_holders() {
+          let mut deps = mock_dependencies(
+              &[Coin {
+                  denom: DEFAULT_REWARD_DENOM.to_string(),
+                  amount: Uint128(100u128),
+              }],
+          );
 
-                              init(&mut deps, env, init_msg).unwrap();
+          let init_msg = default_init();
+          let mut env = mock_env();
+          let info = mock_info("addr0000", &[]);
+          instantiate(deps.as_mut(), env.clone(),info, init_msg);
 
-                              let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
-                              let receive_msg = receive_stake_msg("addr0000", 100);
-                              handle(&mut deps, env, receive_msg.clone()).unwrap();
+          let info = mock_info(MOCK_CW20_CONTRACT_ADDR, &[]);
+          let receive_msg = receive_stake_msg("addr0000", 100);
+          execute(deps.as_mut(), env.clone(), info, receive_msg.clone()).unwrap();
 
-                              let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
-                              let receive_msg = receive_stake_msg("addr0001", 200);
-                              handle(&mut deps, env, receive_msg.clone()).unwrap();
+          let info = mock_info(MOCK_CW20_CONTRACT_ADDR, &[]);
+          let receive_msg = receive_stake_msg("addr0001", 200);
+          execute(deps.as_mut(), env.clone(), info, receive_msg.clone()).unwrap();
 
-                              let env = mock_env(MOCK_CW20_CONTRACT_ADDR, &[]);
-                              let receive_msg = receive_stake_msg("addr0002", 300);
-                              handle(&mut deps, env, receive_msg.clone()).unwrap();
+          let info = mock_info(MOCK_CW20_CONTRACT_ADDR, &[]);
+          let receive_msg = receive_stake_msg("addr0002", 300);
+          execute(deps.as_mut(), env.clone(), info, receive_msg.clone()).unwrap();
 
-                              let res = query(
-                                  &deps,
-                                  QueryMsg::Holders {
-                                      start_after: None,
-                                      limit: None,
-                                  },
-                              )
-                              .unwrap();
-                              let holders_response: HoldersResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  holders_response,
-                                  HoldersResponse {
-                                      holders: vec![
-                                          HolderResponse {
-                                              address: HumanAddr::from("addr0000"),
-                                              balance: Uint128::from(100u128),
-                                              index: Decimal::zero(),
-                                              pending_rewards: Decimal::zero(),
-                                          },
-                                          HolderResponse {
-                                              address: HumanAddr::from("addr0001"),
-                                              balance: Uint128::from(200u128),
-                                              index: Decimal::zero(),
-                                              pending_rewards: Decimal::zero(),
-                                          },
-                                          HolderResponse {
-                                              address: HumanAddr::from("addr0002"),
-                                              balance: Uint128::from(300u128),
-                                              index: Decimal::zero(),
-                                              pending_rewards: Decimal::zero(),
-                                          }
-                                      ],
-                                  }
-                              );
+          let res = query(deps.as_ref(), env.clone(), QueryMsg::Holders {
+              start_after: None,
+              limit: None,
+          }).unwrap();
+          let holders_response: HoldersResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              holders_response,
+              HoldersResponse {
+                  holders: vec![
+                      HolderResponse {
+                          address: Addr::unchecked("addr0000"),
+                          balance: Uint128::from(100u128),
+                          index: Decimal::zero(),
+                          pending_rewards: Decimal::zero(),
+                      },
+                      HolderResponse {
+                          address: Addr::unchecked("addr0001"),
+                          balance: Uint128::from(200u128),
+                          index: Decimal::zero(),
+                          pending_rewards: Decimal::zero(),
+                      },
+                      HolderResponse {
+                          address: Addr::unchecked("addr0002"),
+                          balance: Uint128::from(300u128),
+                          index: Decimal::zero(),
+                          pending_rewards: Decimal::zero(),
+                      }
+                  ],
+              }
+          );
 
-                              // Set limit
-                              let res = query(
-                                  &deps,
-                                  QueryMsg::Holders {
-                                      start_after: None,
-                                      limit: Some(1),
-                                  },
-                              )
-                              .unwrap();
-                              let holders_response: HoldersResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  holders_response,
-                                  HoldersResponse {
-                                      holders: vec![HolderResponse {
-                                          address: HumanAddr::from("addr0000"),
-                                          balance: Uint128::from(100u128),
-                                          index: Decimal::zero(),
-                                          pending_rewards: Decimal::zero(),
-                                      }],
-                                  }
-                              );
+          // Set limit
+          let res = query(deps.as_ref(), env.clone(), QueryMsg::Holders {
+              start_after: None,
+              limit: Some(1),
+          }).unwrap();
+          let holders_response: HoldersResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              holders_response,
+              HoldersResponse {
+                  holders: vec![HolderResponse {
+                      address: Addr::unchecked("addr0000"),
+                      balance: Uint128::from(100u128),
+                      index: Decimal::zero(),
+                      pending_rewards: Decimal::zero(),
+                  }],
+              }
+          );
 
-                              // Set start_after
-                              let res = query(
-                                  &deps,
-                                  QueryMsg::Holders {
-                                      start_after: Some(HumanAddr::from("addr0000")),
-                                      limit: None,
-                                  },
-                              )
-                              .unwrap();
-                              let holders_response: HoldersResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  holders_response,
-                                  HoldersResponse {
-                                      holders: vec![
-                                          HolderResponse {
-                                              address: HumanAddr::from("addr0001"),
-                                              balance: Uint128::from(200u128),
-                                              index: Decimal::zero(),
-                                              pending_rewards: Decimal::zero(),
-                                          },
-                                          HolderResponse {
-                                              address: HumanAddr::from("addr0002"),
-                                              balance: Uint128::from(300u128),
-                                              index: Decimal::zero(),
-                                              pending_rewards: Decimal::zero(),
-                                          }
-                                      ],
-                                  }
-                              );
+          // Set start_after
+          let res = query(deps.as_ref(), env.clone(), QueryMsg::Holders {
+              start_after: Some(Addr::unchecked("addr0000")),
+              limit: None,
+          }).unwrap();
+          let holders_response: HoldersResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              holders_response,
+              HoldersResponse {
+                  holders: vec![
+                      HolderResponse {
+                          address: Addr::unchecked("addr0001"),
+                          balance: Uint128::from(200u128),
+                          index: Decimal::zero(),
+                          pending_rewards: Decimal::zero(),
+                      },
+                      HolderResponse {
+                          address: Addr::unchecked("addr0002"),
+                          balance: Uint128::from(300u128),
+                          index: Decimal::zero(),
+                          pending_rewards: Decimal::zero(),
+                      }
+                  ],
+              }
+          );
 
-                              // Set start_after and limit
-                              let res = query(
-                                  &deps,
-                                  QueryMsg::Holders {
-                                      start_after: Some(HumanAddr::from("addr0000")),
-                                      limit: Some(1),
-                                  },
-                              )
-                              .unwrap();
-                              let holders_response: HoldersResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  holders_response,
-                                  HoldersResponse {
-                                      holders: vec![HolderResponse {
-                                          address: HumanAddr::from("addr0001"),
-                                          balance: Uint128::from(200u128),
-                                          index: Decimal::zero(),
-                                          pending_rewards: Decimal::zero(),
-                                      }],
-                                  }
-                              );
-                          }
+          // Set start_after and limit
+          let res = query(deps.as_ref(), env.clone(), QueryMsg::Holders {
+              start_after: Some(Addr::unchecked("addr0000")),
+              limit: Some(1),
+          }).unwrap();
+          let holders_response: HoldersResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              holders_response,
+              HoldersResponse {
+                  holders: vec![HolderResponse {
+                      address: Addr::unchecked("addr0001"),
+                      balance: Uint128::from(200u128),
+                      index: Decimal::zero(),
+                      pending_rewards: Decimal::zero(),
+                  }],
+              }
+          );
+      }
 
-                          #[test]
-                          fn proper_prev_balance() {
-                              let mut deps = mock_dependencies(
-                                  20,
-                                  &[Coin {
-                                      denom: "uusd".to_string(),
-                                      amount: Uint128(100u128),
-                                  }],
-                              );
+      #[test]
+      fn proper_prev_balance() {
+          let mut deps = mock_dependencies(
+              &[Coin {
+                  denom: DEFAULT_REWARD_DENOM.to_string(),
+                  amount: Uint128(100u128),
+              }],
+          );
 
-                              let init_msg = default_init();
-                              let env = mock_env("addr0000", &[]);
+          let init_msg = default_init();
+          let mut env = mock_env();
+          let info = mock_info("addr0000", &[]);
+          instantiate(deps.as_mut(), env.clone(),info, init_msg);
 
-                              init(&mut deps, env, init_msg).unwrap();
+          let amount1 = Uint128::from(8899999999988889u128);
+          let amount2 = Uint128::from(14487875351811111u128);
+          let amount3 = Uint128::from(1100000000000000u128);
 
-                              let amount1 = Uint128::from(8899999999988889u128);
-                              let amount2 = Uint128::from(14487875351811111u128);
-                              let amount3 = Uint128::from(1100000000000000u128);
+          let rewards = Uint128(677101666827000000u128);
 
-                              let rewards = Uint128(677101666827000000u128);
+          let all_balance = amount1 + amount2 + amount3;
 
-                              let all_balance = amount1 + amount2 + amount3;
+          let global_index = Decimal::from_ratio(rewards, all_balance);
+          STATE.save(deps.as_mut().storage,&State {
+              global_index,
+              total_balance: all_balance,
+              prev_reward_balance: rewards,
+          } ).unwrap();
 
-                              let global_index = Decimal::from_ratio(rewards, all_balance);
-                              store_state(
-                                  &mut deps.storage,
-                                  &State {
-                                      global_index,
-                                      total_balance: all_balance,
-                                      prev_reward_balance: rewards,
-                                  },
-                              )
-                              .unwrap();
+          let holder = Holder {
+              balance: amount1,
+              index: Decimal::from_str("0").unwrap(),
+              pending_rewards: Decimal::from_str("0").unwrap(),
+          };
+          store_holder(
+              &mut deps.storage,
+              &deps
+                  .api.addr_canonicalize("addr0000")
+                  .unwrap(),
+              &holder,
+          )
+          .unwrap();
 
-                              let holder = Holder {
-                                  balance: amount1,
-                                  index: Decimal::from_str("0").unwrap(),
-                                  pending_rewards: Decimal::from_str("0").unwrap(),
-                              };
-                              store_holder(
-                                  &mut deps.storage,
-                                  &deps
-                                      .api
-                                      .canonical_address(&HumanAddr::from("addr0000"))
-                                      .unwrap(),
-                                  &holder,
-                              )
-                              .unwrap();
+          let holder = Holder {
+              balance: amount2,
+              index: Decimal::from_str("0").unwrap(),
+              pending_rewards: Decimal::from_str("0").unwrap(),
+          };
+          store_holder(
+              &mut deps.storage,
+              &deps
+                  .api
+                  .addr_canonicalize("addr0001")
+                  .unwrap(),
+              &holder,
+          )
+          .unwrap();
 
-                              let holder = Holder {
-                                  balance: amount2,
-                                  index: Decimal::from_str("0").unwrap(),
-                                  pending_rewards: Decimal::from_str("0").unwrap(),
-                              };
-                              store_holder(
-                                  &mut deps.storage,
-                                  &deps
-                                      .api
-                                      .canonical_address(&HumanAddr::from("addr0001"))
-                                      .unwrap(),
-                                  &holder,
-                              )
-                              .unwrap();
+          let holder = Holder {
+              balance: amount3,
+              index: Decimal::from_str("0").unwrap(),
+              pending_rewards: Decimal::from_str("0").unwrap(),
+          };
+          store_holder(
+              &mut deps.storage,
+              &deps
+                  .api
+                  .addr_canonicalize("addr0002")
+                  .unwrap(),
+              &holder,
+          )
+          .unwrap();
 
-                              let holder = Holder {
-                                  balance: amount3,
-                                  index: Decimal::from_str("0").unwrap(),
-                                  pending_rewards: Decimal::from_str("0").unwrap(),
-                              };
-                              store_holder(
-                                  &mut deps.storage,
-                                  &deps
-                                      .api
-                                      .canonical_address(&HumanAddr::from("addr0002"))
-                                      .unwrap(),
-                                  &holder,
-                              )
-                              .unwrap();
+          let msg = ExecuteMsg::ClaimRewards { recipient: None };
+          let info = mock_info("addr0000", &[]);
+          execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
-                              let msg = HandleMsg::ClaimRewards { recipient: None };
-                              let env = mock_env("addr0000", &[]);
-                              let _res = handle(&mut deps, env, msg).unwrap();
+          let msg = ExecuteMsg::ClaimRewards { recipient: None };
+          let info = mock_info("addr0001", &[]);
+          execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
-                              let msg = HandleMsg::ClaimRewards { recipient: None };
-                              let env = mock_env("addr0001", &[]);
-                              let _res = handle(&mut deps, env, msg).unwrap();
+          let msg = ExecuteMsg::ClaimRewards { recipient: None };
+          let info = mock_info("addr0002", &[]);
+          execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
-                              let msg = HandleMsg::ClaimRewards { recipient: None };
-                              let env = mock_env("addr0002", &[]);
-                              let _res = handle(&mut deps, env, msg).unwrap();
+          let res = query(deps.as_ref(),env.clone(), QueryMsg::State {}).unwrap();
+          let state_response: StateResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              state_response,
+              StateResponse {
+                  global_index,
+                  total_balance: all_balance,
+                  prev_reward_balance: Uint128(1)
+              }
+          );
+          let res = query(deps.as_ref(), env.clone(), QueryMsg::Holder {
+              address: Addr::unchecked("addr0000"),
+          }).unwrap();
 
-                              let res = query(&deps, QueryMsg::State {}).unwrap();
-                              let state_response: StateResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  state_response,
-                                  StateResponse {
-                                      global_index,
-                                      total_balance: all_balance,
-                                      prev_reward_balance: Uint128(1)
-                                  }
-                              );
+          let holder_response: HolderResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              holder_response,
+              HolderResponse {
+                  address: Addr::unchecked("addr0000"),
+                  balance: amount1,
+                  index: global_index,
+                  pending_rewards: Decimal::from_str("0.212799238975421283").unwrap(),
+              }
+          );
 
-                              let res = query(
-                                  &deps,
-                                  QueryMsg::Holder {
-                                      address: HumanAddr::from("addr0000"),
-                                  },
-                              )
-                              .unwrap();
-                              let holder_response: HolderResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  holder_response,
-                                  HolderResponse {
-                                      address: HumanAddr::from("addr0000"),
-                                      balance: amount1,
-                                      index: global_index,
-                                      pending_rewards: Decimal::from_str("0.212799238975421283").unwrap(),
-                                  }
-                              );
+          let res = query(deps.as_ref(), env.clone(), QueryMsg::Holder {
+              address: Addr::unchecked("addr0001"),
+          }).unwrap();
+          let holder_response: HolderResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              holder_response,
+              HolderResponse {
+                  address: Addr::unchecked("addr0001"),
+                  balance: amount2,
+                  index: global_index,
+                  pending_rewards: Decimal::from_str("0.078595712259178717").unwrap(),
+              }
+          );
 
-                              let res = query(
-                                  &deps,
-                                  QueryMsg::Holder {
-                                      address: HumanAddr::from("addr0001"),
-                                  },
-                              )
-                              .unwrap();
-                              let holder_response: HolderResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  holder_response,
-                                  HolderResponse {
-                                      address: HumanAddr::from("addr0001"),
-                                      balance: amount2,
-                                      index: global_index,
-                                      pending_rewards: Decimal::from_str("0.078595712259178717").unwrap(),
-                                  }
-                              );
+          let res = query(deps.as_ref(), env.clone(), QueryMsg::Holder {
+              address: Addr::unchecked("addr0002"),
+          }).unwrap();
+          let holder_response: HolderResponse = from_binary(&res).unwrap();
+          assert_eq!(
+              holder_response,
+              HolderResponse {
+                  address: Addr::unchecked("addr0002"),
+                  balance: amount3,
+                  index: global_index,
+                  pending_rewards: Decimal::from_str("0.701700000000000000").unwrap(),
+              }
+          );
+      }
 
-                              let res = query(
-                                  &deps,
-                                  QueryMsg::Holder {
-                                      address: HumanAddr::from("addr0002"),
-                                  },
-                              )
-                              .unwrap();
-                              let holder_response: HolderResponse = from_binary(&res).unwrap();
-                              assert_eq!(
-                                  holder_response,
-                                  HolderResponse {
-                                      address: HumanAddr::from("addr0002"),
-                                      balance: amount3,
-                                      index: global_index,
-                                      pending_rewards: Decimal::from_str("0.701700000000000000").unwrap(),
-                                  }
-                              );
-                          }
 
-                       */
 }
