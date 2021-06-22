@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, BlockInfo, CanonicalAddr, Deps, StdResult, Storage, Uint128};
+use cosmwasm_std::{BlockInfo, CanonicalAddr, Deps, StdResult, Storage, Uint128};
 // use cw_storage_plus::Map;
 use cw20::Expiration;
 use cw_storage_plus::Map;

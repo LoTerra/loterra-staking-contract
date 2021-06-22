@@ -1,7 +1,7 @@
 use crate::state::{read_holder, read_holders, store_holder, Config, Holder, State, CONFIG, STATE};
 
 use cosmwasm_std::{
-    attr, from_binary, to_binary, Addr, BankMsg, Coin, Decimal, Deps, DepsMut, Env, MessageInfo,
+    attr, from_binary, to_binary, BankMsg, Coin, Decimal, Deps, DepsMut, Env, MessageInfo,
     Response, StdError, StdResult, Uint128, WasmMsg,
 };
 

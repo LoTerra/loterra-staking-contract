@@ -1,5 +1,5 @@
 use crate::msg::HolderResponse;
-use cosmwasm_std::{CanonicalAddr, Decimal, Deps, Order, StdResult, Storage, Uint128, Addr, Api};
+use cosmwasm_std::{Addr, Api, CanonicalAddr, Decimal, Deps, Order, StdResult, Storage, Uint128};
 use cw_storage_plus::{Bound, Item, Map};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -65,12 +65,7 @@ pub fn read_holders(
     let start = calc_range_start(deps.api, start_after.map(Addr::unchecked))?.map(Bound::exclusive);
 
     holder_bucket
-        .range(
-            deps.storage,
-            start,
-            None,
-            Order::Ascending,
-        )
+        .range(deps.storage, start, None, Order::Ascending)
         .take(limit)
         .map(|elem| {
             let (k, v) = elem?;

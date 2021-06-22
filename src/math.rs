@@ -1,5 +1,5 @@
-use cosmwasm_std::Decimal;
 use cosmwasm_bignumber::Decimal256;
+use cosmwasm_std::Decimal;
 
 /// return a * b
 pub fn decimal_multiplication_in_256(a: Decimal, b: Decimal) -> Decimal {
