@@ -12,7 +12,8 @@
         "bond_stake": {
           "type": "object"
         }
-      }
+      },
+      "additionalProperties": false
     }
   ]
 }
