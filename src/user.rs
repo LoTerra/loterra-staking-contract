@@ -18,16 +18,17 @@ pub fn handle_claim_rewards(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    recipient: Option<Addr>,
+    recipient: Option<String>,
 ) -> StdResult<Response> {
     let holder_addr = info.sender.clone();
     let holder_addr_raw = deps.api.addr_canonicalize(&holder_addr.as_str())?;
+
     let recipient = match recipient {
-        Some(value) => value,
-        None => info.sender,
+        Some(value) => deps.api.addr_validate(value.as_str()).unwrap(),
+        None => holder_addr.clone(),
     };
 
-    let mut holder: Holder = read_holder(&deps.as_ref(), &holder_addr_raw)?;
+    let mut holder: Holder = read_holder(deps.storage, &holder_addr_raw)?;
     let mut state: State = STATE.load(deps.storage)?;
     let config: Config = CONFIG.load(deps.storage)?;
 
@@ -44,7 +45,7 @@ pub fn handle_claim_rewards(
         return Err(StdError::generic_err("No rewards have accrued yet"));
     }
     //let f = state.prev_reward_balance.wrapping_sub(rewards);
-    let new_balance = Uint128(state.prev_reward_balance.u128() - rewards.u128());
+    let new_balance = (state.prev_reward_balance.checked_sub(rewards))?;
     state.prev_reward_balance = new_balance;
     STATE.save(deps.storage, &state)?;
 
@@ -55,9 +56,9 @@ pub fn handle_claim_rewards(
     Ok(Response {
         submessages: vec![],
         messages: vec![BankMsg::Send {
-            to_address: Addr::to_string(&recipient),
+            to_address: recipient.to_string(),
             amount: vec![deduct_tax(
-                deps,
+                &deps.querier,
                 Coin {
                     denom: config.reward_denom,
                     amount: rewards,
@@ -89,10 +90,9 @@ pub fn handle_receive(
         ));
     }
 
-    let holder_addr = deps.api.addr_validate(&wrapper.sender)?;
     let msg: ReceiveMsg = from_binary(&wrapper.msg)?;
     match msg {
-        ReceiveMsg::BondStake {} => handle_bond(deps, env, info, holder_addr, wrapper.amount),
+        ReceiveMsg::BondStake {} => handle_bond(deps, env, info, wrapper.sender, wrapper.amount),
     }
 }
 
@@ -100,7 +100,7 @@ pub fn handle_bond(
     deps: DepsMut,
     _env: Env,
     info: MessageInfo,
-    holder_addr: Addr,
+    holder_addr: String,
     amount: Uint128,
 ) -> StdResult<Response> {
     if !info.funds.is_empty() {
@@ -113,7 +113,7 @@ pub fn handle_bond(
     let address_raw = deps.api.addr_canonicalize(&holder_addr.as_str())?;
 
     let mut state: State = STATE.load(deps.storage)?;
-    let mut holder: Holder = read_holder(&deps.as_ref(), &address_raw)?;
+    let mut holder: Holder = read_holder(deps.storage, &address_raw)?;
 
     // get decimals
     let rewards = calculate_decimal_rewards(state.global_index, holder.index, holder.balance)?;
@@ -158,7 +158,7 @@ pub fn handle_unbound(
     }
 
     let mut state: State = STATE.load(deps.storage)?;
-    let mut holder: Holder = read_holder(&deps.as_ref(), &address_raw)?;
+    let mut holder: Holder = read_holder(deps.storage, &address_raw)?;
     if holder.balance < amount {
         return Err(StdError::generic_err(format!(
             "Decrease amount cannot exceed user balance: {}",
@@ -232,10 +232,10 @@ pub fn handle_withdraw_stake(
     })
 }
 
-pub fn query_accrued_rewards(deps: Deps, address: Addr) -> StdResult<AccruedRewardsResponse> {
+pub fn query_accrued_rewards(deps: Deps, address: String) -> StdResult<AccruedRewardsResponse> {
     let global_index = STATE.load(deps.storage)?.global_index;
 
-    let holder: Holder = read_holder(&deps, &deps.api.addr_canonicalize(&address.as_str())?)?;
+    let holder: Holder = read_holder(deps.storage, &deps.api.addr_canonicalize(&address)?)?;
     let reward_with_decimals =
         calculate_decimal_rewards(global_index, holder.index, holder.balance)?;
     let all_reward_with_decimals =
@@ -246,8 +246,8 @@ pub fn query_accrued_rewards(deps: Deps, address: Addr) -> StdResult<AccruedRewa
     Ok(AccruedRewardsResponse { rewards })
 }
 
-pub fn query_holder(deps: Deps, address: Addr) -> StdResult<HolderResponse> {
-    let holder: Holder = read_holder(&deps, &deps.api.addr_canonicalize(&address.as_str())?)?;
+pub fn query_holder(deps: Deps, address: String) -> StdResult<HolderResponse> {
+    let holder: Holder = read_holder(deps.storage, &deps.api.addr_canonicalize(&address)?)?;
     Ok(HolderResponse {
         address,
         balance: holder.balance,
@@ -258,11 +258,11 @@ pub fn query_holder(deps: Deps, address: Addr) -> StdResult<HolderResponse> {
 
 pub fn query_holders(
     deps: Deps,
-    start_after: Option<Addr>,
+    start_after: Option<String>,
     limit: Option<u32>,
 ) -> StdResult<HoldersResponse> {
     let start_after = if let Some(start_after) = start_after {
-        Some(deps.api.addr_canonicalize(&start_after.as_str())?)
+        Some(deps.api.addr_validate(&start_after)?)
     } else {
         None
     };

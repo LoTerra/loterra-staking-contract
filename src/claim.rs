@@ -72,7 +72,7 @@ pub fn claim_tokens(
     Ok(to_send)
 }
 
-pub fn query_claims(deps: Deps, address: Addr) -> StdResult<ClaimsResponse> {
+pub fn query_claims(deps: Deps, address: String) -> StdResult<ClaimsResponse> {
     let address_raw = deps.api.addr_canonicalize(address.as_str())?;
 
     let claims = CLAIM

@@ -1,9 +1,5 @@
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{
-    from_slice, to_binary, Addr, Api, Binary, Coin, ContractResult, Decimal, OwnedDeps, Querier,
-    QuerierResult, QueryRequest, Response, StdError, StdResult, SystemError, SystemResult, Uint128,
-    WasmQuery,
-};
+use cosmwasm_std::{from_slice, to_binary, Addr, Api, Binary, Coin, ContractResult, Decimal, OwnedDeps, Querier, QuerierResult, QueryRequest, Response, StdError, StdResult, SystemError, SystemResult, Uint128, WasmQuery, BankQuery, BalanceResponse};
 use std::str::FromStr;
 use terra_cosmwasm::{
     ExchangeRateItem, ExchangeRatesResponse, TaxCapResponse, TaxRateResponse, TerraQuery,
@@ -17,9 +13,9 @@ pub const MOCK_TOKEN_CONTRACT_ADDR: &str = "token";
 
 pub fn mock_dependencies(
     contract_balance: &[Coin],
-) -> OwnedDeps<MockStorage, MockApi, MockQuerier> {
-    let contract_addr = Addr::unchecked(MOCK_CONTRACT_ADDR);
-    let custom_querier = MockQuerier::new(&[(&contract_addr.as_str(), contract_balance)]);
+) -> OwnedDeps<MockStorage, MockApi, WasmMockQuerier> {
+
+    let custom_querier = WasmMockQuerier::new(MockQuerier::new(&[(MOCK_CONTRACT_ADDR, contract_balance)]));
     OwnedDeps {
         storage: MockStorage::default(),
         api: MockApi::default(),
@@ -48,24 +44,24 @@ impl Querier for WasmMockQuerier {
 
 impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<TerraQueryWrapper>) -> QuerierResult {
-        let contract_result: ContractResult<Binary> = match request {
+
+        match &request {
             QueryRequest::Custom(TerraQueryWrapper { route, query_data }) => match query_data {
                 TerraQuery::TaxRate {} => {
                     let res = TaxRateResponse {
                         rate: Decimal::percent(1),
                     };
-                    to_binary(&res).into()
+                    SystemResult::Ok(ContractResult::from(to_binary(&res)))
                 }
                 TerraQuery::TaxCap { denom: _ } => {
                     let cap = Uint128(1u128);
                     let res = TaxCapResponse { cap };
-                    to_binary(&res).into()
+                    SystemResult::Ok(ContractResult::from(to_binary(&res)))
                 }
                 _ => panic!("DO NOT ENTER HERE"),
             },
-            _ => ContractResult::Err("err".to_string()),
-        };
-        SystemResult::Ok(contract_result)
+            _ => self.base.handle_query(request),
+        }
     }
 }
 

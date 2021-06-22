@@ -39,7 +39,7 @@ pub enum ExecuteMsg {
     ///////////////////
 
     /// return the accrued reward in usdt to the user.
-    ClaimRewards { recipient: Option<Addr> },
+    ClaimRewards { recipient: Option<String> },
 
     /// This accepts a properly-encoded ReceiveMsg from a cw20 contract
     Receive(Cw20ReceiveMsg),
@@ -60,23 +60,23 @@ pub enum QueryMsg {
     Config {},
     State {},
     AccruedRewards {
-        address: Addr,
+        address: String,
     },
     Holder {
-        address: Addr,
+        address: String,
     },
     Holders {
-        start_after: Option<Addr>,
+        start_after: Option<String>,
         limit: Option<u32>,
     },
     Claims {
-        address: Addr,
+        address: String,
     },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigResponse {
-    pub cw20_token_addr: Addr,
+    pub cw20_token_addr: String,
     pub reward_denom: String,
     pub unbonding_period: u64,
 }
@@ -95,7 +95,7 @@ pub struct AccruedRewardsResponse {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct HolderResponse {
-    pub address: Addr,
+    pub address: String,
     pub balance: Uint128,
     pub index: Decimal,
     pub pending_rewards: Decimal,

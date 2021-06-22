@@ -19,8 +19,7 @@
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::testing::{
-        mock_dependencies, mock_env, mock_info, MockApi, MockStorage, MOCK_CONTRACT_ADDR,
+    use cosmwasm_std::testing::{mock_env, mock_info, MockApi, MockStorage, MOCK_CONTRACT_ADDR,
     };
     use cosmwasm_std::{
         from_binary, to_binary, Addr, Api, BankMsg, Coin, CosmosMsg, Decimal, Empty, HumanAddr,
@@ -38,19 +37,21 @@ mod tests {
     use cw20_base;
     use cw_multi_test;
     use terra_cosmwasm;
-    /*use crate::testing::mock_querier::{
+    use crate::testing::mock_querier::{
         mock_dependencies, MOCK_CW20_CONTRACT_ADDR, MOCK_HUB_CONTRACT_ADDR,
         MOCK_TOKEN_CONTRACT_ADDR,
-    };*/
+    };
+
     use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
     use cw_multi_test::{App, Contract, ContractWrapper, SimpleBank};
     use std::ops::Add;
     use std::str::FromStr;
+    use schemars::_serde_json::to_string;
 
     const DEFAULT_REWARD_DENOM: &str = "uusd";
-    const MOCK_CW20_CONTRACT_ADDR: &str = "lottery";
-    const MOCK_HUB_CONTRACT_ADDR: &str = "hub";
-    const MOCK_TOKEN_CONTRACT_ADDR: &str = "token";
+    //const MOCK_CW20_CONTRACT_ADDR: &str = "lottery";
+    //const MOCK_HUB_CONTRACT_ADDR: &str = "hub";
+    //const MOCK_TOKEN_CONTRACT_ADDR: &str = "token";
     fn default_init() -> InstantiateMsg {
         InstantiateMsg {
             cw20_token_addr: Addr::unchecked(MOCK_CW20_CONTRACT_ADDR),
@@ -112,7 +113,7 @@ mod tests {
         assert_eq!(
             config_response,
             ConfigResponse {
-                cw20_token_addr: Addr::unchecked(MOCK_CW20_CONTRACT_ADDR),
+                cw20_token_addr:MOCK_CW20_CONTRACT_ADDR.to_string(),
                 reward_denom: DEFAULT_REWARD_DENOM.to_string(),
                 unbonding_period: 1000
             }
@@ -202,16 +203,16 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
 
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: Uint128::from(100u128),
                 index: Decimal::zero(),
                 pending_rewards: Decimal::zero(),
@@ -230,16 +231,16 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
 
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: Uint128::from(200u128),
                 index: Decimal::one(),
                 pending_rewards: Decimal::from_str("100").unwrap(),
@@ -272,16 +273,16 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
 
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: Uint128::from(11u128),
                 index: Decimal::zero(),
                 pending_rewards: Decimal::zero(),
@@ -308,10 +309,10 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
 
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         let index = decimal_multiplication_in_256(
@@ -325,7 +326,7 @@ mod tests {
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: Uint128::from(21u128),
                 index,
                 pending_rewards: user_pend_reward,
@@ -379,7 +380,7 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
         .unwrap();
@@ -388,7 +389,7 @@ mod tests {
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: Uint128::zero(),
                 index: Decimal::one(),
                 pending_rewards: Decimal::from_str("100").unwrap(),
@@ -417,17 +418,12 @@ mod tests {
             )
             .unwrap();*/
 
-        let mut deps = testing::mock_querier::mock_dependencies(&[Coin {
-            denom: DEFAULT_REWARD_DENOM.to_string(),
-            amount: Uint128(100u128),
-        }]);
-
-        /*let mut deps =  mock_dependencies(
+        let mut deps =  mock_dependencies(
             &[Coin {
                 denom: DEFAULT_REWARD_DENOM.to_string(),
                 amount: Uint128(100u128),
             }],
-        );*/
+        );
 
         let init_msg = default_init();
         let env = mock_env();
@@ -441,16 +437,16 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
 
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: Uint128::from(100u128),
                 index: Decimal::zero(),
                 pending_rewards: Decimal::zero(),
@@ -486,7 +482,7 @@ mod tests {
         execute(deps.as_mut(), env.clone(), info, msg).unwrap();
 
         let msg = ExecuteMsg::ClaimRewards {
-            recipient: Some(Addr::unchecked("addr0000")),
+            recipient: Some(Addr::unchecked("addr0000").to_string()),
         };
         let info = mock_info("addr0000", &[]);
         let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
@@ -522,16 +518,16 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
 
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: Uint128::from(100u128),
                 index: Decimal::zero(),
                 pending_rewards: Decimal::zero(),
@@ -619,16 +615,16 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
 
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: Uint128::from(100u128),
                 index: Decimal::zero(),
                 pending_rewards: Decimal::zero(),
@@ -703,15 +699,14 @@ mod tests {
     fn claim_rewards_with_decimals() {
         let mut deps = mock_dependencies(&[Coin {
             denom: DEFAULT_REWARD_DENOM.to_string(),
-            amount: Uint128(100u128),
+            amount: Uint128(99999u128),
         }]);
-
         let init_msg = default_init();
         let mut env = mock_env();
         let info = mock_info("addr0000", &[]);
         instantiate(deps.as_mut(), env.clone(), info, init_msg);
 
-        let info = mock_info("addr0000", &[]);
+        let info = mock_info(MOCK_CW20_CONTRACT_ADDR, &[]);
         let receive_msg = receive_stake_msg("addr0000", 11);
         execute(deps.as_mut(), env.clone(), info, receive_msg.clone()).unwrap();
 
@@ -719,16 +714,16 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
 
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: Uint128::from(11u128),
                 index: Decimal::zero(),
                 pending_rewards: Decimal::zero(),
@@ -759,10 +754,10 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         let index = decimal_multiplication_in_256(
             Decimal::from_ratio(Uint128(99999), Uint128(11)),
@@ -771,7 +766,7 @@ mod tests {
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: Uint128::from(11u128),
                 index,
                 pending_rewards: Decimal::from_str("0.999999999999999991").unwrap(),
@@ -829,19 +824,19 @@ mod tests {
             HoldersResponse {
                 holders: vec![
                     HolderResponse {
-                        address: Addr::unchecked("addr0000"),
+                        address: "addr0000".to_string(),
                         balance: Uint128::from(100u128),
                         index: Decimal::zero(),
                         pending_rewards: Decimal::zero(),
                     },
                     HolderResponse {
-                        address: Addr::unchecked("addr0001"),
+                        address: "addr0001".to_string(),
                         balance: Uint128::from(200u128),
                         index: Decimal::zero(),
                         pending_rewards: Decimal::zero(),
                     },
                     HolderResponse {
-                        address: Addr::unchecked("addr0002"),
+                        address: "addr0002".to_string(),
                         balance: Uint128::from(300u128),
                         index: Decimal::zero(),
                         pending_rewards: Decimal::zero(),
@@ -865,7 +860,7 @@ mod tests {
             holders_response,
             HoldersResponse {
                 holders: vec![HolderResponse {
-                    address: Addr::unchecked("addr0000"),
+                    address:"addr0000".to_string(),
                     balance: Uint128::from(100u128),
                     index: Decimal::zero(),
                     pending_rewards: Decimal::zero(),
@@ -878,7 +873,7 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holders {
-                start_after: Some(Addr::unchecked("addr0000")),
+                start_after: Some("addr0000".to_string()),
                 limit: None,
             },
         )
@@ -889,13 +884,13 @@ mod tests {
             HoldersResponse {
                 holders: vec![
                     HolderResponse {
-                        address: Addr::unchecked("addr0001"),
+                        address: "addr0001".to_string(),
                         balance: Uint128::from(200u128),
                         index: Decimal::zero(),
                         pending_rewards: Decimal::zero(),
                     },
                     HolderResponse {
-                        address: Addr::unchecked("addr0002"),
+                        address: "addr0002".to_string(),
                         balance: Uint128::from(300u128),
                         index: Decimal::zero(),
                         pending_rewards: Decimal::zero(),
@@ -909,7 +904,7 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holders {
-                start_after: Some(Addr::unchecked("addr0000")),
+                start_after: Some("addr0000".to_string()),
                 limit: Some(1),
             },
         )
@@ -919,7 +914,7 @@ mod tests {
             holders_response,
             HoldersResponse {
                 holders: vec![HolderResponse {
-                    address: Addr::unchecked("addr0001"),
+                    address: "addr0001".to_string(),
                     balance: Uint128::from(200u128),
                     index: Decimal::zero(),
                     pending_rewards: Decimal::zero(),
@@ -1022,16 +1017,16 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
 
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0000"),
+                address: "addr0000".to_string(),
                 balance: amount1,
                 index: global_index,
                 pending_rewards: Decimal::from_str("0.212799238975421283").unwrap(),
@@ -1042,15 +1037,15 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0001"),
+                address: "addr0001".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0001"),
+                address: "addr0001".to_string(),
                 balance: amount2,
                 index: global_index,
                 pending_rewards: Decimal::from_str("0.078595712259178717").unwrap(),
@@ -1061,15 +1056,15 @@ mod tests {
             deps.as_ref(),
             env.clone(),
             QueryMsg::Holder {
-                address: Addr::unchecked("addr0002"),
+                address: "addr0002".to_string(),
             },
         )
-        .unwrap();
+            .unwrap();
         let holder_response: HolderResponse = from_binary(&res).unwrap();
         assert_eq!(
             holder_response,
             HolderResponse {
-                address: Addr::unchecked("addr0002"),
+                address: "addr0002".to_string(),
                 balance: amount3,
                 index: global_index,
                 pending_rewards: Decimal::from_str("0.701700000000000000").unwrap(),

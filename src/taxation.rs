@@ -1,11 +1,11 @@
-use cosmwasm_std::{Coin, Decimal, DepsMut, StdResult, Uint128};
+use cosmwasm_std::{Coin, Decimal, QuerierWrapper, StdResult, Uint128};
 
 use terra_cosmwasm::TerraQuerier;
 
 static DECIMAL_FRACTION: Uint128 = Uint128(1_000_000_000_000_000_000u128);
 
-pub fn compute_tax(deps: DepsMut, coin: &Coin) -> StdResult<Uint128> {
-    let terra_querier = TerraQuerier::new(&deps.querier);
+pub fn compute_tax(querier: &QuerierWrapper, coin: &Coin) -> StdResult<Uint128> {
+    let terra_querier = TerraQuerier::new(querier);
     let tax_rate: Decimal = (terra_querier.query_tax_rate()?).rate;
     let tax_cap: Uint128 = (terra_querier.query_tax_cap(coin.denom.to_string())?).cap;
     Ok(std::cmp::min(
@@ -17,10 +17,10 @@ pub fn compute_tax(deps: DepsMut, coin: &Coin) -> StdResult<Uint128> {
     ))
 }
 
-pub fn deduct_tax(deps: DepsMut, coin: Coin) -> StdResult<Coin> {
-    let tax_amount = compute_tax(deps, &coin)?;
+pub fn deduct_tax(querier: &QuerierWrapper, coin: Coin) -> StdResult<Coin> {
+    let tax_amount = compute_tax(querier, &coin)?;
     Ok(Coin {
         denom: coin.denom,
-        amount: Uint128(coin.amount.u128() - tax_amount.u128()),
+        amount: (coin.amount.checked_sub(tax_amount))?,
     })
 }
