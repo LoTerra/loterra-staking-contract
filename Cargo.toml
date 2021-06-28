@@ -1,6 +1,6 @@
 [package]
 name = "loterra-staking-contract"
-version = "2.0.1"
+version = "2.0.2"
 authors = ["MSNTCS <mohammad@terra.money>", "0xantman <antho74830@gmail.com>"]
 edition = "2018"
 description= "LoTerra staking contract based on Anchor staking contract"
@@ -31,6 +31,7 @@ overflow-checks = true
 [features]
 # for more explicit tests, cargo test --features=backtraces
 backtraces = ["cosmwasm-std/backtraces"]
+library = []
 
 [dependencies]
 cw20 = "0.6.1"
