@@ -6,6 +6,7 @@
     "cw20_token_addr",
     "cw20_token_reward_addr",
     "daily_rewards",
+    "open_every_block_time",
     "unbonding_period"
   ],
   "properties": {
@@ -17,6 +18,11 @@
     },
     "daily_rewards": {
       "$ref": "#/definitions/Uint128"
+    },
+    "open_every_block_time": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
     },
     "unbonding_period": {
       "type": "integer",

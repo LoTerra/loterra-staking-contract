@@ -5,7 +5,6 @@
   "required": [
     "global_index",
     "open_block_time",
-    "open_every_block_time",
     "prev_reward_balance",
     "total_balance"
   ],
@@ -14,11 +13,6 @@
       "$ref": "#/definitions/Decimal"
     },
     "open_block_time": {
-      "type": "integer",
-      "format": "uint64",
-      "minimum": 0.0
-    },
-    "open_every_block_time": {
       "type": "integer",
       "format": "uint64",
       "minimum": 0.0

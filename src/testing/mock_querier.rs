@@ -1,11 +1,14 @@
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{from_slice, to_binary, Coin, Decimal, Extern, HumanAddr, Querier, QuerierResult, QueryRequest, SystemError, Uint128, WasmQuery};
+use cosmwasm_std::{
+    from_slice, to_binary, Coin, Decimal, Extern, HumanAddr, Querier, QuerierResult, QueryRequest,
+    SystemError, Uint128, WasmQuery,
+};
+use cw20::BalanceResponse;
 use std::str::FromStr;
 use terra_cosmwasm::{
     ExchangeRateItem, ExchangeRatesResponse, TaxCapResponse, TaxRateResponse, TerraQuery,
     TerraQueryWrapper, TerraRoute,
 };
-use cw20::BalanceResponse;
 
 pub const MOCK_HUB_CONTRACT_ADDR: &str = "hub";
 pub const MOCK_CW20_CONTRACT_ADDR: &str = "lottery";
@@ -57,8 +60,8 @@ impl WasmMockQuerier {
             QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => {
                 println!("{}", contract_addr);
                 if contract_addr.to_string() == MOCK_TOKEN_CONTRACT_REWARD_ADDR {
-                    let msg_balance = BalanceResponse{
-                        balance: Uint128(10000000000)
+                    let msg_balance = BalanceResponse {
+                        balance: Uint128(10000000000),
                     };
                     return Ok(to_binary(&msg_balance));
                 }
@@ -115,5 +118,4 @@ impl WasmMockQuerier {
             canonical_length,
         }
     }
-
 }

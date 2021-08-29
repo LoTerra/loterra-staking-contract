@@ -21,7 +21,8 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
         cw20_token_addr: deps.api.canonical_address(&msg.cw20_token_addr)?,
         cw20_token_reward_addr: deps.api.canonical_address(&msg.cw20_token_reward_addr)?,
         unbonding_period: msg.unbonding_period,
-        daily_rewards: msg.daily_rewards
+        daily_rewards: msg.daily_rewards,
+        open_every_block_time: msg.open_every_block_time,
     };
 
     store_config(&mut deps.storage, &conf)?;
@@ -32,7 +33,6 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
             total_balance: Uint128::zero(),
             prev_reward_balance: Uint128::zero(),
             open_block_time: env.block.time,
-            open_every_block_time: 86400
         },
     )?;
 
@@ -77,7 +77,8 @@ fn query_config<S: Storage, A: Api, Q: Querier>(
         cw20_token_addr: deps.api.human_address(&config.cw20_token_addr)?,
         cw20_token_reward_addr: deps.api.human_address(&config.cw20_token_reward_addr)?,
         unbonding_period: config.unbonding_period,
-        daily_rewards: config.daily_rewards
+        daily_rewards: config.daily_rewards,
+        open_every_block_time: config.open_every_block_time,
     })
 }
 
@@ -88,7 +89,6 @@ fn query_state<S: Storage, A: Api, Q: Querier>(deps: &Extern<S, A, Q>) -> StdRes
         total_balance: state.total_balance,
         prev_reward_balance: state.prev_reward_balance,
         open_block_time: state.open_block_time,
-        open_every_block_time: state.open_every_block_time
     })
 }
 

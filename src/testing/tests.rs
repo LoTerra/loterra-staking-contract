@@ -34,7 +34,7 @@ mod tests {
     use crate::state::{store_holder, store_state, Holder, State};
     use crate::testing::mock_querier::{
         mock_dependencies, MOCK_CW20_CONTRACT_ADDR, MOCK_HUB_CONTRACT_ADDR,
-        MOCK_TOKEN_CONTRACT_ADDR, MOCK_TOKEN_CONTRACT_REWARD_ADDR
+        MOCK_TOKEN_CONTRACT_ADDR, MOCK_TOKEN_CONTRACT_REWARD_ADDR,
     };
     use cw20::{Cw20HandleMsg, Cw20ReceiveMsg};
     use std::str::FromStr;
@@ -46,7 +46,8 @@ mod tests {
             cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
             unbonding_period: 1000,
             cw20_token_reward_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR),
-            daily_rewards: Uint128(100)
+            daily_rewards: Uint128(100),
+            open_every_block_time: 86400,
         }
     }
 
@@ -78,7 +79,8 @@ mod tests {
                 cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
                 unbonding_period: 1000,
                 cw20_token_reward_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR),
-                daily_rewards: Uint128(100)
+                daily_rewards: Uint128(100),
+                open_every_block_time: 86400
             }
         );
 
@@ -91,7 +93,6 @@ mod tests {
                 total_balance: Uint128(0u128),
                 prev_reward_balance: Uint128::zero(),
                 open_block_time: 0,
-                open_every_block_time: 86400
             }
         );
     }
@@ -128,7 +129,6 @@ mod tests {
                 total_balance: Uint128::from(100u128),
                 prev_reward_balance: Uint128::zero(),
                 open_block_time: 0,
-                open_every_block_time: 86400
             },
         )
         .unwrap();
@@ -145,8 +145,7 @@ mod tests {
                 global_index: Decimal::one(),
                 total_balance: Uint128::from(100u128),
                 prev_reward_balance: Uint128::from(100u128),
-                open_block_time: 0,
-                open_every_block_time: 86400
+                open_block_time: 0
             }
         );
     }
@@ -399,16 +398,16 @@ mod tests {
         let msg = HandleMsg::ClaimRewards { recipient: None };
         let env = mock_env("addr0000", &[]);
         let res = handle(&mut deps, env, msg).unwrap();
-        let msg = Cw20HandleMsg::Transfer { recipient: HumanAddr::from("addr0000"), amount: Uint128(100) };
+        let msg = Cw20HandleMsg::Transfer {
+            recipient: HumanAddr::from("addr0000"),
+            amount: Uint128(100),
+        };
         let msg_execute = WasmMsg::Execute {
             contract_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR),
             msg: to_binary(&msg).unwrap(),
-            send: vec![]
+            send: vec![],
         };
-        assert_eq!(
-            res.messages,
-            vec![msg_execute.into()]
-        );
+        assert_eq!(res.messages, vec![msg_execute.into()]);
 
         // Set recipient
         // claimed_rewards = 100, total_balance = 100
@@ -685,16 +684,16 @@ mod tests {
         let env = mock_env("addr0000", &[]);
         let res = handle(&mut deps, env, msg).unwrap();
 
-        let msg = Cw20HandleMsg::Transfer { recipient: HumanAddr::from("addr0000"), amount: Uint128(99998) };
+        let msg = Cw20HandleMsg::Transfer {
+            recipient: HumanAddr::from("addr0000"),
+            amount: Uint128(99998),
+        };
         let msg_execute = WasmMsg::Execute {
             contract_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR),
             msg: to_binary(&msg).unwrap(),
-            send: vec![]
+            send: vec![],
         };
-        assert_eq!(
-            res.messages,
-            vec![msg_execute.into()]
-        );
+        assert_eq!(res.messages, vec![msg_execute.into()]);
 
         let res = query(
             &deps,
@@ -726,8 +725,7 @@ mod tests {
                 global_index: index,
                 total_balance: Uint128(11u128),
                 prev_reward_balance: Uint128(1),
-                open_block_time: 0,
-                open_every_block_time: 86400
+                open_block_time: 0
             }
         );
     }
@@ -900,7 +898,6 @@ mod tests {
                 total_balance: all_balance,
                 prev_reward_balance: rewards,
                 open_block_time: 0,
-                open_every_block_time: 86400
             },
         )
         .unwrap();
@@ -970,8 +967,7 @@ mod tests {
                 global_index,
                 total_balance: all_balance,
                 prev_reward_balance: Uint128(1),
-                open_block_time: 0,
-                open_every_block_time: 86400
+                open_block_time: 0
             }
         );
 

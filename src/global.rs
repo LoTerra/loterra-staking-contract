@@ -1,10 +1,13 @@
 use crate::state::{read_config, read_state, store_state, State};
 
 use crate::math::decimal_summation_in_256;
-use cosmwasm_std::{log, to_binary, Api, CosmosMsg, Decimal, Env, Extern, HandleResponse, Querier, StdError, StdResult, Storage, WasmQuery, Uint128};
+use cosmwasm_std::{
+    log, to_binary, Api, CosmosMsg, Decimal, Env, Extern, HandleResponse, Querier, StdError,
+    StdResult, Storage, Uint128, WasmQuery,
+};
 use cw20::BalanceResponse;
 use cw20::Cw20QueryMsg as Cw20Query;
-use std::ops::{Sub, Add};
+use std::ops::{Add, Sub};
 
 /// Increase global_index according to claimed rewards amount
 /// Only hub_contract is allowed to execute
@@ -38,11 +41,12 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
     let res: BalanceResponse = deps.querier.query(&query_msg.into())?; */
     let previous_balance = state.prev_reward_balance;
     // New opening
-    state.open_block_time = state.open_block_time + state.open_every_block_time;
+    state.open_block_time = state.open_block_time + config.open_every_block_time;
     // claimed_rewards = current_balance - prev_balance;
-    let claimed_rewards = (/*res.balance*/ config.daily_rewards.add(previous_balance) - previous_balance)?;
+    let claimed_rewards =
+        (/*res.balance*/config.daily_rewards.add(previous_balance) - previous_balance)?;
 
-    state.prev_reward_balance = config.daily_rewards;//res.balance;
+    state.prev_reward_balance = config.daily_rewards; //res.balance;
 
     // global_index += claimed_rewards / total_balance;
     state.global_index = decimal_summation_in_256(
