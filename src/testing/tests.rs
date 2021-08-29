@@ -45,7 +45,8 @@ mod tests {
         InitMsg {
             cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
             unbonding_period: 1000,
-            cw20_token_reward_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR)
+            cw20_token_reward_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR),
+            daily_rewards: Uint128(100)
         }
     }
 
@@ -76,7 +77,8 @@ mod tests {
             ConfigResponse {
                 cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
                 unbonding_period: 1000,
-                cw20_token_reward_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR)
+                cw20_token_reward_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR),
+                daily_rewards: Uint128(100)
             }
         );
 
@@ -88,7 +90,6 @@ mod tests {
                 global_index: Decimal::zero(),
                 total_balance: Uint128(0u128),
                 prev_reward_balance: Uint128::zero(),
-                days: Uint128(365),
                 open_block_time: 0,
                 open_every_block_time: 86400
             }
@@ -126,7 +127,6 @@ mod tests {
                 global_index: Decimal::zero(),
                 total_balance: Uint128::from(100u128),
                 prev_reward_balance: Uint128::zero(),
-                days: Uint128(365),
                 open_block_time: 0,
                 open_every_block_time: 86400
             },
@@ -145,7 +145,6 @@ mod tests {
                 global_index: Decimal::one(),
                 total_balance: Uint128::from(100u128),
                 prev_reward_balance: Uint128::from(100u128),
-                days: Uint128(365),
                 open_block_time: 0,
                 open_every_block_time: 86400
             }
@@ -727,7 +726,6 @@ mod tests {
                 global_index: index,
                 total_balance: Uint128(11u128),
                 prev_reward_balance: Uint128(1),
-                days: Uint128(365),
                 open_block_time: 0,
                 open_every_block_time: 86400
             }
@@ -901,7 +899,6 @@ mod tests {
                 global_index,
                 total_balance: all_balance,
                 prev_reward_balance: rewards,
-                days: Uint128(365),
                 open_block_time: 0,
                 open_every_block_time: 86400
             },
@@ -973,7 +970,6 @@ mod tests {
                 global_index,
                 total_balance: all_balance,
                 prev_reward_balance: Uint128(1),
-                days: Uint128(365),
                 open_block_time: 0,
                 open_every_block_time: 86400
             }

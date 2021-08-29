@@ -4,7 +4,7 @@ use crate::math::decimal_summation_in_256;
 use cosmwasm_std::{log, to_binary, Api, CosmosMsg, Decimal, Env, Extern, HandleResponse, Querier, StdError, StdResult, Storage, WasmQuery, Uint128};
 use cw20::BalanceResponse;
 use cw20::Cw20QueryMsg as Cw20Query;
-use std::ops::Sub;
+use std::ops::{Sub, Add};
 
 /// Increase global_index according to claimed rewards amount
 /// Only hub_contract is allowed to execute
@@ -27,7 +27,7 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
     if state.total_balance.is_zero() {
         return Err(StdError::generic_err("No asset is bonded by Hub"));
     }
-    let balance_query = Cw20Query::Balance {
+    /*let balance_query = Cw20Query::Balance {
         address: env.contract.address,
     };
     let query_msg = WasmQuery::Smart {
@@ -35,24 +35,14 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
         msg: to_binary(&balance_query)?,
     };
     // Load the reward contract balance
-    let res: BalanceResponse = deps.querier.query(&query_msg.into())?;
-
+    let res: BalanceResponse = deps.querier.query(&query_msg.into())?; */
     let previous_balance = state.prev_reward_balance;
-    let amount = if state.days.is_zero(){
-        // Relaunch
-        state.days = Uint128(365);
-        Uint128(1).multiply_ratio(res.balance, state.days)
-    } else{
-        Uint128(1).multiply_ratio(res.balance, state.days)
-    };
-    // Sub 1 day
-    state.days = state.days.sub(Uint128(1))?;
     // New opening
     state.open_block_time = state.open_block_time + state.open_every_block_time;
     // claimed_rewards = current_balance - prev_balance;
-    let claimed_rewards = (/*res.balance*/ amount - previous_balance)?;
+    let claimed_rewards = (/*res.balance*/ config.daily_rewards.add(previous_balance) - previous_balance)?;
 
-    state.prev_reward_balance = amount;//res.balance;
+    state.prev_reward_balance = config.daily_rewards;//res.balance;
 
     // global_index += claimed_rewards / total_balance;
     state.global_index = decimal_summation_in_256(

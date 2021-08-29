@@ -14,13 +14,14 @@ use crate::msg::{ConfigResponse, HandleMsg, InitMsg, MigrateMsg, QueryMsg, State
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
-    _env: Env,
+    env: Env,
     msg: InitMsg,
 ) -> StdResult<InitResponse> {
     let conf = Config {
         cw20_token_addr: deps.api.canonical_address(&msg.cw20_token_addr)?,
         cw20_token_reward_addr: deps.api.canonical_address(&msg.cw20_token_reward_addr)?,
         unbonding_period: msg.unbonding_period,
+        daily_rewards: msg.daily_rewards
     };
 
     store_config(&mut deps.storage, &conf)?;
@@ -30,8 +31,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
             global_index: Decimal::zero(),
             total_balance: Uint128::zero(),
             prev_reward_balance: Uint128::zero(),
-            days: Uint128(365),
-            open_block_time: 0,
+            open_block_time: env.block.time,
             open_every_block_time: 86400
         },
     )?;
@@ -77,6 +77,7 @@ fn query_config<S: Storage, A: Api, Q: Querier>(
         cw20_token_addr: deps.api.human_address(&config.cw20_token_addr)?,
         cw20_token_reward_addr: deps.api.human_address(&config.cw20_token_reward_addr)?,
         unbonding_period: config.unbonding_period,
+        daily_rewards: config.daily_rewards
     })
 }
 
@@ -86,7 +87,6 @@ fn query_state<S: Storage, A: Api, Q: Querier>(deps: &Extern<S, A, Q>) -> StdRes
         global_index: state.global_index,
         total_balance: state.total_balance,
         prev_reward_balance: state.prev_reward_balance,
-        days: state.days,
         open_block_time: state.open_block_time,
         open_every_block_time: state.open_every_block_time
     })

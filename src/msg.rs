@@ -9,6 +9,7 @@ pub struct InitMsg {
     pub cw20_token_addr: HumanAddr,
     pub cw20_token_reward_addr: HumanAddr,
     pub unbonding_period: u64,
+    pub daily_rewards: Uint128
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -79,6 +80,7 @@ pub struct ConfigResponse {
     pub cw20_token_addr: HumanAddr,
     pub cw20_token_reward_addr: HumanAddr,
     pub unbonding_period: u64,
+    pub daily_rewards: Uint128
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -86,7 +88,6 @@ pub struct StateResponse {
     pub global_index: Decimal,
     pub total_balance: Uint128,
     pub prev_reward_balance: Uint128,
-    pub days: Uint128,
     pub open_block_time: u64,
     pub open_every_block_time: u64
 }

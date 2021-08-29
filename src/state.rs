@@ -17,7 +17,7 @@ pub struct Config {
     pub cw20_token_addr: CanonicalAddr,
     pub cw20_token_reward_addr: CanonicalAddr,
     pub unbonding_period: u64,
-
+    pub daily_rewards: Uint128
 }
 
 pub fn store_config<S: Storage>(storage: &mut S, config: &Config) -> StdResult<()> {
@@ -33,7 +33,6 @@ pub struct State {
     pub global_index: Decimal,
     pub total_balance: Uint128,
     pub prev_reward_balance: Uint128,
-    pub days: Uint128,
     pub open_block_time: u64,
     pub open_every_block_time: u64
 }

@@ -3,7 +3,6 @@
   "title": "StateResponse",
   "type": "object",
   "required": [
-    "days",
     "global_index",
     "open_block_time",
     "open_every_block_time",
@@ -11,9 +10,6 @@
     "total_balance"
   ],
   "properties": {
-    "days": {
-      "$ref": "#/definitions/Uint128"
-    },
     "global_index": {
       "$ref": "#/definitions/Decimal"
     },

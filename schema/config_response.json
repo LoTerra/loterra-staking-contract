@@ -5,6 +5,7 @@
   "required": [
     "cw20_token_addr",
     "cw20_token_reward_addr",
+    "daily_rewards",
     "unbonding_period"
   ],
   "properties": {
@@ -14,6 +15,9 @@
     "cw20_token_reward_addr": {
       "$ref": "#/definitions/HumanAddr"
     },
+    "daily_rewards": {
+      "$ref": "#/definitions/Uint128"
+    },
     "unbonding_period": {
       "type": "integer",
       "format": "uint64",
@@ -22,6 +26,9 @@
   },
   "definitions": {
     "HumanAddr": {
+      "type": "string"
+    },
+    "Uint128": {
       "type": "string"
     }
   }
