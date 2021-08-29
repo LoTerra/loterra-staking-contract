@@ -2,9 +2,11 @@ use crate::state::{read_config, read_state, store_state, State};
 
 use crate::math::decimal_summation_in_256;
 use cosmwasm_std::{
-    log, Api, Decimal, Env, Extern, HandleResponse, Querier, StdError, StdResult, Storage,
+    log, to_binary, Api, CosmosMsg, Decimal, Env, Extern, HandleResponse, Querier, StdError,
+    StdResult, Storage, WasmQuery,
 };
-
+use cw20::BalanceResponse;
+use cw20::Cw20QueryMsg as Cw20Query;
 /// Increase global_index according to claimed rewards amount
 /// Only hub_contract is allowed to execute
 pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
@@ -12,7 +14,7 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
     env: Env,
 ) -> StdResult<HandleResponse> {
     let mut state: State = read_state(&deps.storage)?;
-
+    let config = read_config(&deps.storage)?;
     // anybody can trigger update_global_index
     /*
     if config.lottery_contract != deps.api.canonical_address(&env.message.sender)? {
@@ -24,21 +26,22 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
     if state.total_balance.is_zero() {
         return Err(StdError::generic_err("No asset is bonded by Hub"));
     }
-
-    let reward_denom = read_config(&deps.storage)?.reward_denom;
-
+    let balance_query = Cw20Query::Balance {
+        address: env.contract.address,
+    };
+    let query_msg = WasmQuery::Smart {
+        contract_addr: deps.api.human_address(&config.cw20_token_reward_addr)?,
+        msg: to_binary(&balance_query)?,
+    };
     // Load the reward contract balance
-    let balance = deps
-        .querier
-        .query_balance(env.contract.address, reward_denom.as_str())
-        .unwrap();
+    let res: BalanceResponse = deps.querier.query(&query_msg.into())?;
 
     let previous_balance = state.prev_reward_balance;
 
     // claimed_rewards = current_balance - prev_balance;
-    let claimed_rewards = (balance.amount - previous_balance)?;
+    let claimed_rewards = (res.balance - previous_balance)?;
 
-    state.prev_reward_balance = balance.amount;
+    state.prev_reward_balance = res.balance;
 
     // global_index += claimed_rewards / total_balance;
     state.global_index = decimal_summation_in_256(

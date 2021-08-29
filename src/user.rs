@@ -4,8 +4,8 @@ use crate::state::{
 };
 
 use cosmwasm_std::{
-    from_binary, log, to_binary, Api, BankMsg, Coin, Decimal, Env, Extern, HandleResponse,
-    HumanAddr, Querier, StdError, StdResult, Storage, Uint128, WasmMsg,
+    from_binary, log, to_binary, Api, BankMsg, Coin, CosmosMsg, Decimal, Env, Extern,
+    HandleResponse, HumanAddr, Querier, StdError, StdResult, Storage, Uint128, WasmMsg,
 };
 
 use crate::claim::{claim_tokens, create_claim};
@@ -22,6 +22,7 @@ pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     env: Env,
     recipient: Option<HumanAddr>,
 ) -> StdResult<HandleResponse> {
+    let config = read_config(&deps.storage)?;
     let contract_addr = env.contract.address;
     let holder_addr = env.message.sender.clone();
     let holder_addr_raw = deps.api.canonical_address(&holder_addr)?;
@@ -55,19 +56,18 @@ pub fn handle_claim_rewards<S: Storage, A: Api, Q: Querier>(
     holder.index = state.global_index;
     store_holder(&mut deps.storage, &holder_addr_raw, &holder)?;
 
+    let msg_execute = Cw20HandleMsg::Transfer {
+        recipient,
+        amount: rewards,
+    };
+    let wasm_execute = WasmMsg::Execute {
+        contract_addr: deps.api.human_address(&config.cw20_token_reward_addr)?,
+        msg: to_binary(&msg_execute)?,
+        send: vec![],
+    };
+
     Ok(HandleResponse {
-        messages: vec![BankMsg::Send {
-            from_address: contract_addr,
-            to_address: recipient,
-            amount: vec![deduct_tax(
-                &deps,
-                Coin {
-                    denom: config.reward_denom,
-                    amount: rewards,
-                },
-            )?],
-        }
-        .into()],
+        messages: vec![wasm_execute.into()],
         log: vec![
             log("action", "claim_reward"),
             log("holder_address", holder_addr),

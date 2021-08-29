@@ -4,15 +4,15 @@
   "type": "object",
   "required": [
     "cw20_token_addr",
-    "reward_denom",
+    "cw20_token_reward_addr",
     "unbonding_period"
   ],
   "properties": {
     "cw20_token_addr": {
       "$ref": "#/definitions/HumanAddr"
     },
-    "reward_denom": {
-      "type": "string"
+    "cw20_token_reward_addr": {
+      "$ref": "#/definitions/HumanAddr"
     },
     "unbonding_period": {
       "type": "integer",

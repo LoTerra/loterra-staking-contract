@@ -15,7 +15,7 @@ pub static PREFIX_HOLDERS: &[u8] = b"holders";
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     pub cw20_token_addr: CanonicalAddr,
-    pub reward_denom: String,
+    pub cw20_token_reward_addr: CanonicalAddr,
     pub unbonding_period: u64,
 }
 

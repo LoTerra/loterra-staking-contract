@@ -34,7 +34,7 @@ mod tests {
     use crate::state::{store_holder, store_state, Holder, State};
     use crate::testing::mock_querier::{
         mock_dependencies, MOCK_CW20_CONTRACT_ADDR, MOCK_HUB_CONTRACT_ADDR,
-        MOCK_TOKEN_CONTRACT_ADDR,
+        MOCK_TOKEN_CONTRACT_ADDR, MOCK_TOKEN_CONTRACT_REWARD_ADDR
     };
     use cw20::{Cw20HandleMsg, Cw20ReceiveMsg};
     use std::str::FromStr;
@@ -44,8 +44,8 @@ mod tests {
     fn default_init() -> InitMsg {
         InitMsg {
             cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
-            reward_denom: DEFAULT_REWARD_DENOM.to_string(),
             unbonding_period: 1000,
+            cw20_token_reward_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR)
         }
     }
 
@@ -75,8 +75,8 @@ mod tests {
             config_response,
             ConfigResponse {
                 cw20_token_addr: HumanAddr::from(MOCK_CW20_CONTRACT_ADDR),
-                reward_denom: DEFAULT_REWARD_DENOM.to_string(),
-                unbonding_period: 1000
+                unbonding_period: 1000,
+                cw20_token_reward_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR)
             }
         );
 

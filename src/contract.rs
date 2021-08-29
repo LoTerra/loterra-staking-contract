@@ -19,7 +19,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<InitResponse> {
     let conf = Config {
         cw20_token_addr: deps.api.canonical_address(&msg.cw20_token_addr)?,
-        reward_denom: msg.reward_denom,
+        cw20_token_reward_addr: deps.api.canonical_address(&msg.cw20_token_reward_addr)?,
         unbonding_period: msg.unbonding_period,
     };
 
@@ -72,7 +72,7 @@ fn query_config<S: Storage, A: Api, Q: Querier>(
     let config: Config = read_config(&deps.storage)?;
     Ok(ConfigResponse {
         cw20_token_addr: deps.api.human_address(&config.cw20_token_addr)?,
-        reward_denom: config.reward_denom,
+        cw20_token_reward_addr: deps.api.human_address(&config.cw20_token_reward_addr)?,
         unbonding_period: config.unbonding_period,
     })
 }

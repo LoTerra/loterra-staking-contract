@@ -7,7 +7,7 @@ use cw20::Cw20ReceiveMsg;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InitMsg {
     pub cw20_token_addr: HumanAddr,
-    pub reward_denom: String,
+    pub cw20_token_reward_addr: HumanAddr,
     pub unbonding_period: u64,
 }
 
@@ -77,7 +77,7 @@ pub enum QueryMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ConfigResponse {
     pub cw20_token_addr: HumanAddr,
-    pub reward_denom: String,
+    pub cw20_token_reward_addr: HumanAddr,
     pub unbonding_period: u64,
 }
 
