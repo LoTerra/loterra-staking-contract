@@ -30,7 +30,7 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
     if state.total_balance.is_zero() {
         return Err(StdError::generic_err("No asset is bonded by Hub"));
     }
-    /*let balance_query = Cw20Query::Balance {
+    let balance_query = Cw20Query::Balance {
         address: env.contract.address,
     };
     let query_msg = WasmQuery::Smart {
@@ -38,7 +38,11 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
         msg: to_binary(&balance_query)?,
     };
     // Load the reward contract balance
-    let res: BalanceResponse = deps.querier.query(&query_msg.into())?; */
+    let res: BalanceResponse = deps.querier.query(&query_msg.into())?; 
+    if res.balance < config.daily_rewards {
+        return Err(StdError::GenericErr { msg: "Balance too low".to_string(), backtrace: None });
+    }
+    
     let previous_balance = state.prev_reward_balance;
     // New opening
     state.open_block_time = state.open_block_time + config.open_every_block_time;
