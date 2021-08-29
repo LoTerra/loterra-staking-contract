@@ -38,19 +38,20 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
         msg: to_binary(&balance_query)?,
     };
     // Load the reward contract balance
-    let res: BalanceResponse = deps.querier.query(&query_msg.into())?; 
-    if res.balance < config.daily_rewards {
-        return Err(StdError::GenericErr { msg: "Balance too low".to_string(), backtrace: None });
-    }
-    
+    let res: BalanceResponse = deps.querier.query(&query_msg.into())?;
+    let new_balance = if res.balance < config.daily_rewards {
+        res.balance
+    } else {
+        config.daily_rewards
+    };
+
     let previous_balance = state.prev_reward_balance;
     // New opening
     state.open_block_time = state.open_block_time + config.open_every_block_time;
     // claimed_rewards = current_balance - prev_balance;
-    let claimed_rewards =
-        (/*res.balance*/config.daily_rewards.add(previous_balance) - previous_balance)?;
+    let claimed_rewards = (/*res.balance*/new_balance.add(previous_balance) - previous_balance)?;
 
-    state.prev_reward_balance = config.daily_rewards.add(previous_balance); //res.balance;
+    state.prev_reward_balance = new_balance.add(previous_balance); //res.balance;
 
     // global_index += claimed_rewards / total_balance;
     state.global_index = decimal_summation_in_256(
