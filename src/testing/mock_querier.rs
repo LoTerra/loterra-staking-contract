@@ -58,7 +58,7 @@ impl WasmMockQuerier {
                 println!("{}", contract_addr);
                 if contract_addr.to_string() == MOCK_TOKEN_CONTRACT_REWARD_ADDR {
                     let msg_balance = BalanceResponse {
-                        balance: Uint128(100),
+                        balance: Uint128(99999),
                     };
                     return Ok(to_binary(&msg_balance));
                 }

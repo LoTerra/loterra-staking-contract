@@ -391,16 +391,15 @@ mod tests {
         let msg = HandleMsg::ClaimRewards { recipient: None };
         let env = mock_env("addr0000", &[]);
         let res = handle(&mut deps, env, msg).unwrap();
+        let msg = Cw20HandleMsg::Transfer { recipient: HumanAddr::from("addr0000"), amount: Uint128(100) };
+        let msg_execute = WasmMsg::Execute {
+            contract_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR),
+            msg: to_binary(&msg).unwrap(),
+            send: vec![]
+        };
         assert_eq!(
             res.messages,
-            vec![CosmosMsg::Bank(BankMsg::Send {
-                from_address: HumanAddr::from(MOCK_CONTRACT_ADDR),
-                to_address: HumanAddr::from("addr0000"),
-                amount: vec![Coin {
-                    denom: "uusd".to_string(),
-                    amount: Uint128::from(99u128), // 1% tax
-                },]
-            })]
+            vec![msg_execute.into()]
         );
 
         // Set recipient
@@ -677,16 +676,16 @@ mod tests {
         let msg = HandleMsg::ClaimRewards { recipient: None };
         let env = mock_env("addr0000", &[]);
         let res = handle(&mut deps, env, msg).unwrap();
+
+        let msg = Cw20HandleMsg::Transfer { recipient: HumanAddr::from("addr0000"), amount: Uint128(99998) };
+        let msg_execute = WasmMsg::Execute {
+            contract_addr: HumanAddr::from(MOCK_TOKEN_CONTRACT_REWARD_ADDR),
+            msg: to_binary(&msg).unwrap(),
+            send: vec![]
+        };
         assert_eq!(
             res.messages,
-            vec![CosmosMsg::Bank(BankMsg::Send {
-                from_address: HumanAddr::from(MOCK_CONTRACT_ADDR),
-                to_address: HumanAddr::from("addr0000"),
-                amount: vec![Coin {
-                    denom: "uusd".to_string(),
-                    amount: Uint128::from(99007u128), // 1% tax
-                },]
-            })]
+            vec![msg_execute.into()]
         );
 
         let res = query(
