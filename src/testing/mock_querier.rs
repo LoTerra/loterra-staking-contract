@@ -57,8 +57,8 @@ impl WasmMockQuerier {
             QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => {
                 println!("{}", contract_addr);
                 if contract_addr.to_string() == MOCK_TOKEN_CONTRACT_REWARD_ADDR {
-                    let msg_balance = BalanceResponse {
-                        balance: Uint128(99999),
+                    let msg_balance = BalanceResponse{
+                        balance: Uint128(10000000000)
                     };
                     return Ok(to_binary(&msg_balance));
                 }
@@ -115,4 +115,5 @@ impl WasmMockQuerier {
             canonical_length,
         }
     }
+
 }

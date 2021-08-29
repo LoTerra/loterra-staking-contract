@@ -86,6 +86,9 @@ pub struct StateResponse {
     pub global_index: Decimal,
     pub total_balance: Uint128,
     pub prev_reward_balance: Uint128,
+    pub days: Uint128,
+    pub open_block_time: u64,
+    pub open_every_block_time: u64
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

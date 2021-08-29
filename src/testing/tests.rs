@@ -123,6 +123,9 @@ mod tests {
                 global_index: Decimal::zero(),
                 total_balance: Uint128::from(100u128),
                 prev_reward_balance: Uint128::zero(),
+                days: Uint128(365),
+                open_block_time: 0,
+                open_every_block_time: 86400
             },
         )
         .unwrap();
@@ -889,6 +892,9 @@ mod tests {
                 global_index,
                 total_balance: all_balance,
                 prev_reward_balance: rewards,
+                days: Uint128(365),
+                open_block_time: 0,
+                open_every_block_time: 86400
             },
         )
         .unwrap();

@@ -3,13 +3,29 @@
   "title": "StateResponse",
   "type": "object",
   "required": [
+    "days",
     "global_index",
+    "open_block_time",
+    "open_every_block_time",
     "prev_reward_balance",
     "total_balance"
   ],
   "properties": {
+    "days": {
+      "$ref": "#/definitions/Uint128"
+    },
     "global_index": {
       "$ref": "#/definitions/Decimal"
+    },
+    "open_block_time": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
+    },
+    "open_every_block_time": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
     },
     "prev_reward_balance": {
       "$ref": "#/definitions/Uint128"
