@@ -46,7 +46,7 @@ pub fn handle_update_global_index<S: Storage, A: Api, Q: Querier>(
     let claimed_rewards =
         (/*res.balance*/config.daily_rewards.add(previous_balance) - previous_balance)?;
 
-    state.prev_reward_balance = config.daily_rewards; //res.balance;
+    state.prev_reward_balance = config.daily_rewards.add(previous_balance); //res.balance;
 
     // global_index += claimed_rewards / total_balance;
     state.global_index = decimal_summation_in_256(
