@@ -87,7 +87,10 @@ mod tests {
             StateResponse {
                 global_index: Decimal::zero(),
                 total_balance: Uint128(0u128),
-                prev_reward_balance: Uint128::zero()
+                prev_reward_balance: Uint128::zero(),
+                days: Uint128(365),
+                open_block_time: 0,
+                open_every_block_time: 86400
             }
         );
     }
@@ -141,7 +144,10 @@ mod tests {
             StateResponse {
                 global_index: Decimal::one(),
                 total_balance: Uint128::from(100u128),
-                prev_reward_balance: Uint128::from(100u128)
+                prev_reward_balance: Uint128::from(100u128),
+                days: Uint128(365),
+                open_block_time: 0,
+                open_every_block_time: 86400
             }
         );
     }
@@ -720,7 +726,10 @@ mod tests {
             StateResponse {
                 global_index: index,
                 total_balance: Uint128(11u128),
-                prev_reward_balance: Uint128(1)
+                prev_reward_balance: Uint128(1),
+                days: Uint128(365),
+                open_block_time: 0,
+                open_every_block_time: 86400
             }
         );
     }
@@ -963,7 +972,10 @@ mod tests {
             StateResponse {
                 global_index,
                 total_balance: all_balance,
-                prev_reward_balance: Uint128(1)
+                prev_reward_balance: Uint128(1),
+                days: Uint128(365),
+                open_block_time: 0,
+                open_every_block_time: 86400
             }
         );
 
