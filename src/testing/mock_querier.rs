@@ -1,13 +1,11 @@
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
 use cosmwasm_std::{
-    from_slice, to_binary, Addr, Api, BalanceResponse, BankQuery, Binary, Coin, ContractResult,
-    Decimal, OwnedDeps, Querier, QuerierResult, QueryRequest, Response, StdError, StdResult,
-    SystemError, SystemResult, Uint128, WasmQuery,
+    from_slice, to_binary, Coin, ContractResult,
+    Decimal, OwnedDeps, Querier, QuerierResult, QueryRequest,
+    SystemError, SystemResult, Uint128,
 };
-use std::str::FromStr;
 use terra_cosmwasm::{
-    ExchangeRateItem, ExchangeRatesResponse, TaxCapResponse, TaxRateResponse, TerraQuery,
-    TerraQueryWrapper, TerraRoute,
+    TaxCapResponse, TaxRateResponse, TerraQuery, TerraQueryWrapper,
 };
 
 pub const MOCK_HUB_CONTRACT_ADDR: &str = "hub";
@@ -49,7 +47,7 @@ impl Querier for WasmMockQuerier {
 impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<TerraQueryWrapper>) -> QuerierResult {
         match &request {
-            QueryRequest::Custom(TerraQueryWrapper { route, query_data }) => match query_data {
+            QueryRequest::Custom(TerraQueryWrapper { route: _, query_data }) => match query_data {
                 TerraQuery::TaxRate {} => {
                     let res = TaxRateResponse {
                         rate: Decimal::percent(1),
@@ -57,7 +55,7 @@ impl WasmMockQuerier {
                     SystemResult::Ok(ContractResult::from(to_binary(&res)))
                 }
                 TerraQuery::TaxCap { denom: _ } => {
-                    let cap = Uint128(1000000u128);
+                    let cap = Uint128::from(1000000u128);
                     let res = TaxCapResponse { cap };
                     SystemResult::Ok(ContractResult::from(to_binary(&res)))
                 }
