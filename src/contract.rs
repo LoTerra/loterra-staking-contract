@@ -15,14 +15,16 @@ use crate::msg::{ConfigResponse, ExecuteMsg, InstantiateMsg, MigrateMsg, QueryMs
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     _info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
     let conf = Config {
         cw20_token_addr: deps.api.addr_canonicalize(&msg.cw20_token_addr.as_str())?,
-        reward_denom: msg.reward_denom,
+        cw20_token_reward_addr: deps.api.addr_canonicalize(&msg.cw20_token_reward_addr.as_str())?,
         unbonding_period: msg.unbonding_period,
+        daily_rewards: msg.daily_rewards,
+        open_every_block_time: msg.open_every_block_time,
     };
 
     CONFIG.save(deps.storage, &conf)?;
@@ -32,6 +34,7 @@ pub fn instantiate(
             global_index: Decimal::zero(),
             total_balance: Uint128::zero(),
             prev_reward_balance: Uint128::zero(),
+            open_block_time: env.block.time.seconds(),
         },
     )?;
 
@@ -68,8 +71,10 @@ pub fn query_config(deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<ConfigRe
 
     Ok(ConfigResponse {
         cw20_token_addr: deps.api.addr_humanize(&config.cw20_token_addr)?.to_string(),
-        reward_denom: config.reward_denom,
+        cw20_token_reward_addr: deps.api.addr_humanize(&config.cw20_token_reward_addr)?.to_string(),
         unbonding_period: config.unbonding_period,
+        daily_rewards: config.daily_rewards,
+        open_every_block_time: config.open_every_block_time,
     })
 }
 pub fn query_state(deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<StateResponse> {
@@ -78,6 +83,7 @@ pub fn query_state(deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<StateResp
         global_index: state.global_index,
         total_balance: state.total_balance,
         prev_reward_balance: state.prev_reward_balance,
+        open_block_time: state.open_block_time,
     })
 }
 

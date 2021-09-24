@@ -1,14 +1,13 @@
 use cosmwasm_std::testing::{MockApi, MockQuerier, MockStorage, MOCK_CONTRACT_ADDR};
-use cosmwasm_std::{
-    from_slice, to_binary, Coin, ContractResult, Decimal, OwnedDeps, Querier, QuerierResult,
-    QueryRequest, SystemError, SystemResult, Uint128,
-};
+use cosmwasm_std::{from_slice, to_binary, Coin, ContractResult, Decimal, OwnedDeps, Querier, QuerierResult, QueryRequest, SystemError, SystemResult, Uint128, WasmQuery};
 use terra_cosmwasm::{TaxCapResponse, TaxRateResponse, TerraQuery, TerraQueryWrapper};
+use cw20::BalanceResponse;
 
 pub const MOCK_HUB_CONTRACT_ADDR: &str = "hub";
 pub const MOCK_CW20_CONTRACT_ADDR: &str = "lottery";
 //pub const MOCK_REWARD_CONTRACT_ADDR: &str = "reward";
 pub const MOCK_TOKEN_CONTRACT_ADDR: &str = "token";
+pub const MOCK_TOKEN_CONTRACT_REWARD_ADDR: &str = "lota";
 
 pub fn mock_dependencies(
     contract_balance: &[Coin],
@@ -44,6 +43,16 @@ impl Querier for WasmMockQuerier {
 impl WasmMockQuerier {
     pub fn handle_query(&self, request: &QueryRequest<TerraQueryWrapper>) -> QuerierResult {
         match &request {
+            QueryRequest::Wasm(WasmQuery::Smart { contract_addr, msg }) => {
+                println!("{}", contract_addr);
+                if contract_addr.to_string() == MOCK_TOKEN_CONTRACT_REWARD_ADDR {
+                    let msg_balance = BalanceResponse {
+                        balance: Uint128::from(10000000000_u128),
+                    };
+                    return SystemResult::Ok(ContractResult::from(to_binary(&msg_balance)))
+                }
+                panic!("DO NOT ENTER HERE")
+            }
             QueryRequest::Custom(TerraQueryWrapper {
                 route: _,
                 query_data,

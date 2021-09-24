@@ -53,17 +53,18 @@ pub fn handle_claim_rewards(
     holder.index = state.global_index;
     store_holder(deps.storage, &holder_addr_raw, &holder)?;
 
+    let msg_execute = Cw20ExecuteMsg::Transfer {
+        recipient: recipient.to_string(),
+        amount: rewards,
+    };
+    let wasm_execute = WasmMsg::Execute {
+        contract_addr: deps.api.addr_humanize(&config.cw20_token_reward_addr)?.to_string(),
+        msg: to_binary(&msg_execute)?,
+        funds: vec![]
+    };
+
     Ok(Response::new()
-        .add_message(CosmosMsg::Bank(BankMsg::Send {
-            to_address: recipient.to_string(),
-            amount: vec![deduct_tax(
-                &deps.querier,
-                Coin {
-                    denom: config.reward_denom,
-                    amount: rewards,
-                },
-            )?],
-        }))
+        .add_message(CosmosMsg::Wasm(wasm_execute))
         .add_attribute("action", "claim_reward")
         .add_attribute("holder_address", holder_addr)
         .add_attribute("rewards", rewards))

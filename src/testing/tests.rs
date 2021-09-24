@@ -34,7 +34,7 @@ mod tests {
     use crate::state::{store_holder, Holder, State, STATE};
     use crate::testing::mock_querier::{
         mock_dependencies, MOCK_CW20_CONTRACT_ADDR, MOCK_HUB_CONTRACT_ADDR,
-        MOCK_TOKEN_CONTRACT_ADDR,
+        MOCK_TOKEN_CONTRACT_ADDR, MOCK_TOKEN_CONTRACT_REWARD_ADDR
     };
 
     use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
@@ -47,8 +47,10 @@ mod tests {
     fn default_init() -> InstantiateMsg {
         InstantiateMsg {
             cw20_token_addr: Addr::unchecked(MOCK_CW20_CONTRACT_ADDR),
-            reward_denom: DEFAULT_REWARD_DENOM.to_string(),
+            cw20_token_reward_addr: Addr::unchecked(MOCK_TOKEN_CONTRACT_REWARD_ADDR),
             unbonding_period: 1000,
+            daily_rewards: Uint128::from(100_u128),
+            open_every_block_time: 86400,
         }
     }
 
@@ -80,8 +82,10 @@ mod tests {
             config_response,
             ConfigResponse {
                 cw20_token_addr: MOCK_CW20_CONTRACT_ADDR.to_string(),
-                reward_denom: DEFAULT_REWARD_DENOM.to_string(),
-                unbonding_period: 1000
+                cw20_token_reward_addr: MOCK_TOKEN_CONTRACT_REWARD_ADDR.to_string(),
+                unbonding_period: 1000,
+                daily_rewards: Uint128::from(100_u128),
+                open_every_block_time: 86400
             }
         );
 
@@ -92,7 +96,8 @@ mod tests {
             StateResponse {
                 global_index: Decimal::zero(),
                 total_balance: Uint128::from(0u128),
-                prev_reward_balance: Uint128::zero()
+                prev_reward_balance: Uint128::zero(),
+                open_block_time: 0,
             }
         );
     }
@@ -124,6 +129,7 @@ mod tests {
                     global_index: Decimal::zero(),
                     total_balance: Uint128::from(100u128),
                     prev_reward_balance: Uint128::zero(),
+                    open_block_time: 0,
                 },
             )
             .unwrap();
@@ -139,7 +145,8 @@ mod tests {
             StateResponse {
                 global_index: Decimal::one(),
                 total_balance: Uint128::from(100u128),
-                prev_reward_balance: Uint128::from(100u128)
+                prev_reward_balance: Uint128::from(100u128),
+                open_block_time: 0,
             }
         );
     }
@@ -726,7 +733,8 @@ mod tests {
             StateResponse {
                 global_index: index,
                 total_balance: Uint128::from(11u128),
-                prev_reward_balance: Uint128::from(1u128)
+                prev_reward_balance: Uint128::from(1u128),
+                open_block_time: 0,
             }
         );
     }
@@ -879,6 +887,7 @@ mod tests {
                     global_index,
                     total_balance: all_balance,
                     prev_reward_balance: rewards,
+                    open_block_time: 0,
                 },
             )
             .unwrap();
@@ -938,7 +947,8 @@ mod tests {
             StateResponse {
                 global_index,
                 total_balance: all_balance,
-                prev_reward_balance: Uint128::from(1u128)
+                prev_reward_balance: Uint128::from(1u128),
+                open_block_time: 0,
             }
         );
         let res = query(
