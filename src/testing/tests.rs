@@ -19,10 +19,10 @@
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::testing::{mock_env, mock_info,};
+    use cosmwasm_std::testing::{mock_env, mock_info};
     use cosmwasm_std::{
-        from_binary, to_binary, Addr, Api, BankMsg, Coin, CosmosMsg, Decimal,
-        MessageInfo, StdError, Uint128, WasmMsg, SubMsg,
+        from_binary, to_binary, Addr, Api, BankMsg, Coin, CosmosMsg, Decimal, MessageInfo,
+        StdError, SubMsg, Uint128, WasmMsg,
     };
 
     use crate::contract::{execute, instantiate, query};
@@ -163,7 +163,8 @@ mod tests {
             env.clone(),
             info.clone(),
             receive_msg.clone(),
-        ).unwrap();
+        )
+        .unwrap();
 
         let res = query(
             deps.as_ref(),
@@ -824,12 +825,7 @@ mod tests {
         )
         .unwrap();
         let holders_response: HoldersResponse = from_binary(&res).unwrap();
-        assert_eq!(
-            holders_response,
-            HoldersResponse {
-                holders: vec![],
-            }
-        );
+        assert_eq!(holders_response, HoldersResponse { holders: vec![] });
 
         // Set start_after and limit
         let res = query(

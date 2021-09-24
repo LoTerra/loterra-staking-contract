@@ -1,8 +1,8 @@
 use crate::state::{read_holder, read_holders, store_holder, Config, Holder, State, CONFIG, STATE};
 
 use cosmwasm_std::{
-    from_binary, to_binary, BankMsg, Coin, Decimal, Deps, DepsMut, Env, MessageInfo,
-    Response, StdError, StdResult, Uint128, WasmMsg, CosmosMsg,
+    from_binary, to_binary, BankMsg, Coin, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo,
+    Response, StdError, StdResult, Uint128, WasmMsg,
 };
 
 use crate::claim::{claim_tokens, create_claim};
@@ -54,24 +54,19 @@ pub fn handle_claim_rewards(
     store_holder(deps.storage, &holder_addr_raw, &holder)?;
 
     Ok(Response::new()
-        .add_message(
-            CosmosMsg::Bank(
-                BankMsg::Send {
-                    to_address: recipient.to_string(),
-                    amount: vec![deduct_tax(
-                        &deps.querier,
-                        Coin {
-                            denom: config.reward_denom,
-                            amount: rewards,
-                        },
-                    )?],
-                }
-            )
-        )
+        .add_message(CosmosMsg::Bank(BankMsg::Send {
+            to_address: recipient.to_string(),
+            amount: vec![deduct_tax(
+                &deps.querier,
+                Coin {
+                    denom: config.reward_denom,
+                    amount: rewards,
+                },
+            )?],
+        }))
         .add_attribute("action", "claim_reward")
         .add_attribute("holder_address", holder_addr)
-        .add_attribute("rewards", rewards)
-    )
+        .add_attribute("rewards", rewards))
 }
 
 pub fn handle_receive(
@@ -128,8 +123,7 @@ pub fn handle_bond(
     Ok(Response::new()
         .add_attribute("action", "bond_stake")
         .add_attribute("holder_address", holder_addr.as_str())
-        .add_attribute("amount", &amount.to_string())
-    )
+        .add_attribute("amount", &amount.to_string()))
 }
 
 pub fn handle_unbound(
@@ -175,8 +169,7 @@ pub fn handle_unbound(
     Ok(Response::new()
         .add_attribute("action", "unbond_stake")
         .add_attribute("holder_address", info.sender.as_str())
-        .add_attribute("amount", &amount.to_string())
-    )
+        .add_attribute("amount", &amount.to_string()))
 }
 
 pub fn handle_withdraw_stake(
@@ -200,19 +193,14 @@ pub fn handle_withdraw_stake(
         amount,
     };
     Ok(Response::new()
-        .add_message(
-            CosmosMsg::Wasm(
-                WasmMsg::Execute {
-                    contract_addr: cw20_human_addr.to_string(),
-                    msg: to_binary(&cw20_transfer_msg)?,
-                    funds: vec![],
-                }
-            )
-        )
+        .add_message(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: cw20_human_addr.to_string(),
+            msg: to_binary(&cw20_transfer_msg)?,
+            funds: vec![],
+        }))
         .add_attribute("action", "withdraw_stake")
         .add_attribute("holder_address", info.sender.as_str())
-        .add_attribute("amount", amount)
-    )
+        .add_attribute("amount", amount))
 }
 
 pub fn query_accrued_rewards(deps: Deps, address: String) -> StdResult<AccruedRewardsResponse> {
@@ -297,7 +285,8 @@ mod tests {
 
     #[test]
     pub fn proper_get_decimals() {
-        let global_index = Decimal::from_ratio(Uint128::from(9999999u128), Uint128::from(100000000u128));
+        let global_index =
+            Decimal::from_ratio(Uint128::from(9999999u128), Uint128::from(100000000u128));
         let user_index = Decimal::zero();
         let user_balance = Uint128::from(10u128);
         let reward = get_decimals(
