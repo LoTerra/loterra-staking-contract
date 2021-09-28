@@ -21,7 +21,9 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     let conf = Config {
         cw20_token_addr: deps.api.addr_canonicalize(&msg.cw20_token_addr.as_str())?,
-        cw20_token_reward_addr: deps.api.addr_canonicalize(&msg.cw20_token_reward_addr.as_str())?,
+        cw20_token_reward_addr: deps
+            .api
+            .addr_canonicalize(&msg.cw20_token_reward_addr.as_str())?,
         unbonding_period: msg.unbonding_period,
         daily_rewards: msg.daily_rewards,
         open_every_block_time: msg.open_every_block_time,
@@ -71,7 +73,10 @@ pub fn query_config(deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<ConfigRe
 
     Ok(ConfigResponse {
         cw20_token_addr: deps.api.addr_humanize(&config.cw20_token_addr)?.to_string(),
-        cw20_token_reward_addr: deps.api.addr_humanize(&config.cw20_token_reward_addr)?.to_string(),
+        cw20_token_reward_addr: deps
+            .api
+            .addr_humanize(&config.cw20_token_reward_addr)?
+            .to_string(),
         unbonding_period: config.unbonding_period,
         daily_rewards: config.daily_rewards,
         open_every_block_time: config.open_every_block_time,

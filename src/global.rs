@@ -1,7 +1,7 @@
 use crate::state::{CONFIG, STATE};
 
 use crate::math::decimal_summation_in_256;
-use cosmwasm_std::{Decimal, DepsMut, Env, Response, StdError, StdResult, WasmQuery, to_binary};
+use cosmwasm_std::{to_binary, Decimal, DepsMut, Env, Response, StdError, StdResult, WasmQuery};
 use cw20::{BalanceResponse, Cw20QueryMsg};
 use std::ops::Add;
 
@@ -25,11 +25,14 @@ pub fn handle_update_global_index(deps: DepsMut, env: Env) -> StdResult<Response
     if state.total_balance.is_zero() {
         return Err(StdError::generic_err("No asset is bonded by Hub"));
     }
-    let balance_query = Cw20QueryMsg::Balance  {
+    let balance_query = Cw20QueryMsg::Balance {
         address: env.contract.address.to_string(),
     };
     let query_msg = WasmQuery::Smart {
-        contract_addr: deps.api.addr_humanize(&config.cw20_token_reward_addr)?.to_string(),
+        contract_addr: deps
+            .api
+            .addr_humanize(&config.cw20_token_reward_addr)?
+            .to_string(),
         msg: to_binary(&balance_query)?,
     };
 
@@ -45,7 +48,7 @@ pub fn handle_update_global_index(deps: DepsMut, env: Env) -> StdResult<Response
     // New opening
     state.open_block_time = state.open_block_time + config.open_every_block_time;
     // claimed_rewards = current_balance - prev_balance;
-    let claimed_rewards = (/*res.balance*/new_balance.add(previous_balance) - previous_balance);
+    let claimed_rewards = new_balance.add(previous_balance) - previous_balance;
 
     state.prev_reward_balance = new_balance.add(previous_balance); //res.balance;
 

@@ -3,7 +3,6 @@ pub mod state;
 
 mod global;
 mod math;
-mod taxation;
 mod user;
 
 pub mod claim;

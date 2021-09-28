@@ -4,12 +4,18 @@
   "type": "object",
   "required": [
     "global_index",
+    "open_block_time",
     "prev_reward_balance",
     "total_balance"
   ],
   "properties": {
     "global_index": {
       "$ref": "#/definitions/Decimal"
+    },
+    "open_block_time": {
+      "type": "integer",
+      "format": "uint64",
+      "minimum": 0.0
     },
     "prev_reward_balance": {
       "$ref": "#/definitions/Uint128"

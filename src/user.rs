@@ -1,8 +1,8 @@
 use crate::state::{read_holder, read_holders, store_holder, Config, Holder, State, CONFIG, STATE};
 
 use cosmwasm_std::{
-    from_binary, to_binary, BankMsg, Coin, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo,
-    Response, StdError, StdResult, Uint128, WasmMsg,
+    from_binary, to_binary, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo, Response,
+    StdError, StdResult, Uint128, WasmMsg,
 };
 
 use crate::claim::{claim_tokens, create_claim};
@@ -10,7 +10,6 @@ use crate::math::{
     decimal_multiplication_in_256, decimal_subtraction_in_256, decimal_summation_in_256,
 };
 use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse, ReceiveMsg};
-use crate::taxation::deduct_tax;
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg, Expiration};
 use std::str::FromStr;
 
@@ -58,9 +57,12 @@ pub fn handle_claim_rewards(
         amount: rewards,
     };
     let wasm_execute = WasmMsg::Execute {
-        contract_addr: deps.api.addr_humanize(&config.cw20_token_reward_addr)?.to_string(),
+        contract_addr: deps
+            .api
+            .addr_humanize(&config.cw20_token_reward_addr)?
+            .to_string(),
         msg: to_binary(&msg_execute)?,
-        funds: vec![]
+        funds: vec![],
     };
 
     Ok(Response::new()
