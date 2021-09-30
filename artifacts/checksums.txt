@@ -1,1 +1,1 @@
-aa0a37c65ccd5faf9981a667419edbed51053dce8178f1153fe2ff40e7e9c97d  loterra_staking_contract.wasm
+0036b20a021c8a61b83249240ec949550a19bf986940289b8e92058ca7372af8  loterra_staking_contract.wasm

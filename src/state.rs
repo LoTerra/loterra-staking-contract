@@ -12,7 +12,7 @@ pub struct Config {
     pub daily_rewards: Uint128,
     pub open_every_block_time: u64,
 }
-pub const CONFIG: Item<Config> = Item::new("config");
+pub const CONFIG: Item<Config> = Item::new("\u{0}\u{6}config");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct State {
@@ -21,7 +21,7 @@ pub struct State {
     pub prev_reward_balance: Uint128,
     pub open_block_time: u64,
 }
-pub const STATE: Item<State> = Item::new("state");
+pub const STATE: Item<State> = Item::new("\u{0}\u{5}state");
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Holder {
