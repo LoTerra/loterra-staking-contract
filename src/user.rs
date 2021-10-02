@@ -1,7 +1,7 @@
 use crate::state::{read_holder, read_holders, store_holder, Config, Holder, State, CONFIG, STATE};
 
 use cosmwasm_std::{
-    attr, from_binary, to_binary, BankMsg, Coin, Decimal, Deps, DepsMut, Env, MessageInfo,
+    from_binary, to_binary, BankMsg, Coin, CosmosMsg, Decimal, Deps, DepsMut, Env, MessageInfo,
     Response, StdError, StdResult, Uint128, WasmMsg,
 };
 
@@ -39,7 +39,7 @@ pub fn handle_claim_rewards(
         decimal_summation_in_256(reward_with_decimals, holder.pending_rewards);
     let decimals = get_decimals(all_reward_with_decimals).unwrap();
 
-    let rewards = all_reward_with_decimals * Uint128(1);
+    let rewards = all_reward_with_decimals * Uint128::from(1u128);
 
     if rewards.is_zero() {
         return Err(StdError::generic_err("No rewards have accrued yet"));
@@ -53,9 +53,8 @@ pub fn handle_claim_rewards(
     holder.index = state.global_index;
     store_holder(deps.storage, &holder_addr_raw, &holder)?;
 
-    Ok(Response {
-        submessages: vec![],
-        messages: vec![BankMsg::Send {
+    Ok(Response::new()
+        .add_message(CosmosMsg::Bank(BankMsg::Send {
             to_address: recipient.to_string(),
             amount: vec![deduct_tax(
                 &deps.querier,
@@ -64,15 +63,10 @@ pub fn handle_claim_rewards(
                     amount: rewards,
                 },
             )?],
-        }
-        .into()],
-        data: None,
-        attributes: vec![
-            attr("action", "claim_reward"),
-            attr("holder_address", holder_addr),
-            attr("rewards", rewards),
-        ],
-    })
+        }))
+        .add_attribute("action", "claim_reward")
+        .add_attribute("holder_address", holder_addr)
+        .add_attribute("rewards", rewards))
 }
 
 pub fn handle_receive(
@@ -126,18 +120,10 @@ pub fn handle_bond(
     store_holder(deps.storage, &address_raw, &holder)?;
     STATE.save(deps.storage, &state)?;
 
-    let res = Response {
-        submessages: vec![],
-        messages: vec![],
-        data: None,
-        attributes: vec![
-            attr("action", "bond_stake"),
-            attr("holder_address", holder_addr),
-            attr("amount", amount),
-        ],
-    };
-
-    Ok(res)
+    Ok(Response::new()
+        .add_attribute("action", "bond_stake")
+        .add_attribute("holder_address", holder_addr.as_str())
+        .add_attribute("amount", &amount.to_string()))
 }
 
 pub fn handle_unbound(
@@ -180,18 +166,10 @@ pub fn handle_unbound(
     let release_height = Expiration::AtHeight(env.block.height + config.unbonding_period);
     create_claim(deps.storage, address_raw, amount, release_height)?;
 
-    let res = Response {
-        submessages: vec![],
-        messages: vec![],
-        data: None,
-        attributes: vec![
-            attr("action", "unbond_stake"),
-            attr("holder_address", info.sender),
-            attr("amount", amount),
-        ],
-    };
-
-    Ok(res)
+    Ok(Response::new()
+        .add_attribute("action", "unbond_stake")
+        .add_attribute("holder_address", info.sender.as_str())
+        .add_attribute("amount", &amount.to_string()))
 }
 
 pub fn handle_withdraw_stake(
@@ -214,22 +192,15 @@ pub fn handle_withdraw_stake(
         recipient: info.sender.to_string(),
         amount,
     };
-    let msg = WasmMsg::Execute {
-        contract_addr: cw20_human_addr.to_string(),
-        msg: to_binary(&cw20_transfer_msg)?,
-        send: vec![],
-    };
-
-    Ok(Response {
-        submessages: vec![],
-        messages: vec![msg.into()],
-        data: None,
-        attributes: vec![
-            attr("action", "withdraw_stake"),
-            attr("holder_address", &info.sender),
-            attr("amount", amount),
-        ],
-    })
+    Ok(Response::new()
+        .add_message(CosmosMsg::Wasm(WasmMsg::Execute {
+            contract_addr: cw20_human_addr.to_string(),
+            msg: to_binary(&cw20_transfer_msg)?,
+            funds: vec![],
+        }))
+        .add_attribute("action", "withdraw_stake")
+        .add_attribute("holder_address", info.sender.as_str())
+        .add_attribute("amount", amount))
 }
 
 pub fn query_accrued_rewards(deps: Deps, address: String) -> StdResult<AccruedRewardsResponse> {
@@ -241,7 +212,7 @@ pub fn query_accrued_rewards(deps: Deps, address: String) -> StdResult<AccruedRe
     let all_reward_with_decimals =
         decimal_summation_in_256(reward_with_decimals, holder.pending_rewards);
 
-    let rewards = all_reward_with_decimals * Uint128(1);
+    let rewards = all_reward_with_decimals * Uint128::from(1u128);
 
     Ok(AccruedRewardsResponse { rewards })
 }
@@ -278,7 +249,7 @@ fn calculate_decimal_rewards(
     user_index: Decimal,
     user_balance: Uint128,
 ) -> StdResult<Decimal> {
-    let decimal_balance = Decimal::from_ratio(user_balance, Uint128(1));
+    let decimal_balance = Decimal::from_ratio(user_balance, Uint128::from(1u128));
     Ok(decimal_multiplication_in_256(
         decimal_subtraction_in_256(global_index, user_index),
         decimal_balance,
@@ -305,18 +276,19 @@ mod tests {
 
     #[test]
     pub fn proper_calculate_rewards() {
-        let global_index = Decimal::from_ratio(Uint128(9), Uint128(100));
+        let global_index = Decimal::from_ratio(Uint128::from(9u128), Uint128::from(100u128));
         let user_index = Decimal::zero();
-        let user_balance = Uint128(1000);
+        let user_balance = Uint128::from(1000u128);
         let reward = calculate_decimal_rewards(global_index, user_index, user_balance).unwrap();
         assert_eq!(reward.to_string(), "90");
     }
 
     #[test]
     pub fn proper_get_decimals() {
-        let global_index = Decimal::from_ratio(Uint128(9999999), Uint128(100000000));
+        let global_index =
+            Decimal::from_ratio(Uint128::from(9999999u128), Uint128::from(100000000u128));
         let user_index = Decimal::zero();
-        let user_balance = Uint128(10);
+        let user_balance = Uint128::from(10u128);
         let reward = get_decimals(
             calculate_decimal_rewards(global_index, user_index, user_balance).unwrap(),
         )
