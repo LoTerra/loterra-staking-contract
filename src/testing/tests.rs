@@ -37,6 +37,7 @@ mod tests {
         MOCK_TOKEN_CONTRACT_ADDR, MOCK_TOKEN_CONTRACT_REWARD_ADDR,
     };
 
+    use crate::claim::query_claims;
     use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
     use std::str::FromStr;
 
@@ -529,20 +530,23 @@ mod tests {
         let msg = ExecuteMsg::WithdrawStake { cap: None };
         let info = mock_info("addr0000", &[]);
         env.block.height = 10;
-        let res = execute(deps.as_mut(), env.clone(), info, msg);
+        let claims = query_claims(deps.as_ref(), "addr0000".to_string()).unwrap();
+        println!("{:?}", claims);
+        assert_eq!(claims.claims.len(), 1);
+        //let res = execute(deps.as_mut(), env.clone(), info, msg);
 
-        match res {
+        /*match res {
             Err(StdError::GenericErr { msg, .. }) => {
                 assert_eq!(msg, "Wait for the unbonding period")
             }
             _ => panic!("Unexpected error"),
-        }
+        }*/
 
         // withdraw works after unbonding period
         let msg = ExecuteMsg::WithdrawStake { cap: None };
         let info = mock_info("addr0000", &[]);
         env.block.height = 10000;
-        let res = execute(deps.as_mut(), env.clone(), info, msg).unwrap();
+        let res = execute(deps.as_mut(), env.clone(), info.clone(), msg.clone()).unwrap();
 
         let cw20_transfer_msg = Cw20ExecuteMsg::Transfer {
             recipient: "addr0000".to_string(),
@@ -556,6 +560,10 @@ mod tests {
                 funds: vec![]
             }))
         );
+        // Cannot claim multiple times
+        let res = execute(deps.as_mut(), env.clone(), info, msg);
+        let claims = query_claims(deps.as_ref(), "addr0000".to_string()).unwrap();
+        assert_eq!(claims.claims.len(), 0);
     }
 
     #[test]

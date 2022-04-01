@@ -45,7 +45,7 @@ pub fn create_claim(
 pub fn claim_tokens(
     storage: &mut dyn Storage,
     addr: CanonicalAddr,
-    block: &BlockInfo,
+    _block: &BlockInfo,
     cap: Option<Uint128>,
 ) -> StdResult<Uint128> {
     let mut to_send = Uint128::zero();
@@ -53,19 +53,19 @@ pub fn claim_tokens(
         let (_send, waiting): (Vec<_>, _) =
             claim.unwrap_or_default().iter().cloned().partition(|c| {
                 // if mature and we can pay fully, then include in _send
-                if c.release_at.is_expired(block) {
-                    if let Some(limit) = cap {
-                        if to_send + c.amount > limit {
-                            return false;
-                        }
+                //if c.release_at.is_expired(block) {
+                if let Some(limit) = cap {
+                    if to_send + c.amount > limit {
+                        return false;
                     }
-                    // TODO: handle partial paying claims?
-                    to_send += c.amount;
-                    true
-                } else {
+                }
+                // TODO: handle partial paying claims?
+                to_send += c.amount;
+                true
+                /*} else {
                     // not to send, leave in waiting and save again
                     false
-                }
+                }*/
             });
         Ok(waiting)
     })?;
