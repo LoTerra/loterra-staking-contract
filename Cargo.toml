@@ -42,6 +42,8 @@ serde = { version = "1.0.125", default-features = false, features = ["derive"] }
 thiserror = { version = "1.0.24" }
 terra-cosmwasm = "2.2.0"
 cosmwasm-bignumber = "2.2.0"
+cw4-group = "0.9.1"
+cw4 = "0.9.1"
 
 [dev-dependencies]
 cosmwasm-schema = { version = "0.16.0", default-features = false }

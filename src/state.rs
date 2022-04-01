@@ -9,6 +9,7 @@ pub struct Config {
     pub cw20_token_addr: CanonicalAddr,
     pub reward_denom: String,
     pub unbonding_period: u64,
+    pub group_addr: CanonicalAddr,
 }
 pub const CONFIG: Item<Config> = Item::new("\u{0}\u{6}config");
 

@@ -9,6 +9,7 @@ pub struct InstantiateMsg {
     pub cw20_token_addr: Addr,
     pub reward_denom: String,
     pub unbonding_period: u64,
+    pub group_addr: Addr,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

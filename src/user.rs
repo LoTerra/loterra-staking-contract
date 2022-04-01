@@ -12,6 +12,8 @@ use crate::math::{
 use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse, ReceiveMsg};
 use crate::taxation::deduct_tax;
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg, Expiration};
+use cw4::Member;
+use cw4_group;
 use std::str::FromStr;
 
 pub fn handle_claim_rewards(
@@ -97,6 +99,7 @@ pub fn handle_bond(
     holder_addr: String,
     amount: Uint128,
 ) -> StdResult<Response> {
+    let config = CONFIG.load(deps.storage)?;
     if !info.funds.is_empty() {
         return Err(StdError::generic_err("Do not send funds with stake"));
     }
@@ -117,10 +120,23 @@ pub fn handle_bond(
     holder.balance += amount;
     state.total_balance += amount;
 
+    let msg = cw4_group::msg::ExecuteMsg::UpdateMembers {
+        remove: vec![holder_addr.clone()],
+        add: vec![Member {
+            addr: holder_addr.clone(),
+            weight: holder.balance.u128() as u64,
+        }],
+    };
+    let exec_msg = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: deps.api.addr_humanize(&config.group_addr)?.to_string(),
+        msg: to_binary(&msg)?,
+        funds: vec![],
+    });
     store_holder(deps.storage, &address_raw, &holder)?;
     STATE.save(deps.storage, &state)?;
 
     Ok(Response::new()
+        .add_message(exec_msg)
         .add_attribute("action", "bond_stake")
         .add_attribute("holder_address", holder_addr.as_str())
         .add_attribute("amount", &amount.to_string()))
@@ -159,6 +175,19 @@ pub fn handle_unbound(
     holder.balance = holder.balance.checked_sub(amount)?;
     state.total_balance = state.total_balance.checked_sub(amount)?;
 
+    let msg = cw4_group::msg::ExecuteMsg::UpdateMembers {
+        remove: vec![info.sender.to_string()],
+        add: vec![Member {
+            addr: info.sender.to_string(),
+            weight: holder.balance.u128() as u64,
+        }],
+    };
+    let exec_msg = CosmosMsg::Wasm(WasmMsg::Execute {
+        contract_addr: deps.api.addr_humanize(&config.group_addr)?.to_string(),
+        msg: to_binary(&msg)?,
+        funds: vec![],
+    });
+
     store_holder(deps.storage, &address_raw, &holder)?;
     STATE.save(deps.storage, &state)?;
 
@@ -167,6 +196,7 @@ pub fn handle_unbound(
     create_claim(deps.storage, address_raw, amount, release_height)?;
 
     Ok(Response::new()
+        .add_message(exec_msg)
         .add_attribute("action", "unbond_stake")
         .add_attribute("holder_address", info.sender.as_str())
         .add_attribute("amount", &amount.to_string()))
