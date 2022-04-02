@@ -121,7 +121,7 @@ pub fn handle_bond(
     state.total_balance += amount;
 
     let msg = cw4_group::msg::ExecuteMsg::UpdateMembers {
-        remove: vec![holder_addr.clone()],
+        remove: vec![],
         add: vec![Member {
             addr: holder_addr.clone(),
             weight: holder.balance.u128() as u64,
@@ -176,7 +176,7 @@ pub fn handle_unbound(
     state.total_balance = state.total_balance.checked_sub(amount)?;
 
     let msg = cw4_group::msg::ExecuteMsg::UpdateMembers {
-        remove: vec![info.sender.to_string()],
+        remove: vec![],
         add: vec![Member {
             addr: info.sender.to_string(),
             weight: holder.balance.u128() as u64,
