@@ -13,7 +13,6 @@ use crate::msg::{AccruedRewardsResponse, HolderResponse, HoldersResponse, Receiv
 use crate::taxation::deduct_tax;
 use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg, Expiration};
 use cw4::Member;
-use cw4_group;
 use std::str::FromStr;
 
 pub fn handle_claim_rewards(
