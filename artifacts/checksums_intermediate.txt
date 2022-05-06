@@ -1,0 +1,1 @@
+a8d9727d10a499c62e0f712df6ee4187cb8f95645e210d9077231f1c56c70888  ./target/wasm32-unknown-unknown/release/loterra_staking_contract.wasm

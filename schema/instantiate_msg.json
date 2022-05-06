@@ -4,11 +4,15 @@
   "type": "object",
   "required": [
     "cw20_token_addr",
+    "group_addr",
     "reward_denom",
     "unbonding_period"
   ],
   "properties": {
     "cw20_token_addr": {
+      "$ref": "#/definitions/Addr"
+    },
+    "group_addr": {
       "$ref": "#/definitions/Addr"
     },
     "reward_denom": {

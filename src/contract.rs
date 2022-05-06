@@ -23,6 +23,7 @@ pub fn instantiate(
         cw20_token_addr: deps.api.addr_canonicalize(&msg.cw20_token_addr.as_str())?,
         reward_denom: msg.reward_denom,
         unbonding_period: msg.unbonding_period,
+        group_addr: deps.api.addr_canonicalize(&msg.group_addr.as_str())?,
     };
 
     CONFIG.save(deps.storage, &conf)?;

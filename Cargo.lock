@@ -162,10 +162,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "cw-storage-plus"
-version = "0.9.0"
+name = "cw-controllers"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a7f5027f469b714b1190d0adc7513ab34581710890087021fdb5847852407de"
+checksum = "71bbd224e31c87615d2b9162190bc33fabb47056d03c6c06f254e3b5b9757318"
+dependencies = [
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw0",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "cw-storage-plus"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8e401ed71bd64abb9b91151a9ff4f7b34e81b2b3eceab23e3cb67fe47e39938"
 dependencies = [
  "cosmwasm-std",
  "schemars",
@@ -174,9 +188,9 @@ dependencies = [
 
 [[package]]
 name = "cw0"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31da5efc36cb72c20f666d2b70cbaf29628c1092384efa9faf5b32e351d02fbe"
+checksum = "d759bb5418a3bdf091e1f1be17de2a15d95d2be4fee28045c2e461f4c6d9d1ca"
 dependencies = [
  "cosmwasm-std",
  "schemars",
@@ -186,9 +200,9 @@ dependencies = [
 
 [[package]]
 name = "cw2"
-version = "0.9.0"
+version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73f874504d19ef98e8c2d8d58c8a42adcaef77a55fd4078c2dd145d49554e40d"
+checksum = "3c6380164fb236412ff43c7ca075d95847c6fa8c51b2d3a513c23127a0f2a8f6"
 dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
@@ -219,6 +233,35 @@ dependencies = [
  "cw0",
  "cw2",
  "cw20",
+ "schemars",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "cw4"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38f20d545406dc62bfb6b2e70f36df62225370a1163f0c82aeb672e5b4cf568d"
+dependencies = [
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "schemars",
+ "serde",
+]
+
+[[package]]
+name = "cw4-group"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f16535a15cc54af5e3b293dc0f876692f71e0f9100785e95d8171e83846cb32"
+dependencies = [
+ "cosmwasm-std",
+ "cw-controllers",
+ "cw-storage-plus",
+ "cw0",
+ "cw2",
+ "cw4",
  "schemars",
  "serde",
  "thiserror",
@@ -393,6 +436,8 @@ dependencies = [
  "cw-storage-plus",
  "cw20",
  "cw20-base",
+ "cw4",
+ "cw4-group",
  "schemars",
  "serde",
  "terra-cosmwasm",

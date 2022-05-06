@@ -49,6 +49,7 @@ mod tests {
             cw20_token_addr: Addr::unchecked(MOCK_CW20_CONTRACT_ADDR),
             reward_denom: DEFAULT_REWARD_DENOM.to_string(),
             unbonding_period: 1000,
+            group_addr: Addr::unchecked("group"),
         }
     }
 
